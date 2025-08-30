@@ -28,7 +28,7 @@ const PerspectiveInputScreen: React.FC = () => {
           <Input
             value={state.userInput}
             onChange={setUserInput}
-            placeholder="Share what's bothering you, and I'll help you see it differently..."
+            placeholder="Share what&apos;s bothering you, and I&apos;ll help you see it differently..."
             type="textarea"
             rows={6}
           />
@@ -47,8 +47,8 @@ const PerspectiveInputScreen: React.FC = () => {
         <h3 className="text-lg font-medium mb-3 text-white">Tips for sharing</h3>
         <div className="space-y-2 text-sm text-pink-100">
           <p>• Be as specific as possible about the situation</p>
-          <p>• Include how you're feeling about it</p>
-          <p>• Don't worry about perfect grammar - just express yourself</p>
+          <p>• Include how you&apos;re feeling about it</p>
+          <p>• Don&apos;t worry about perfect grammar - just express yourself</p>
           <p>• Remember, this is a safe space to share</p>
         </div>
       </GlassCard>

@@ -40,7 +40,7 @@ const PerspectiveScreen: React.FC = () => {
     },
     {
       title: "Kindness", 
-      content: "It's okay to feel the way you do. Remember to be as kind to yourself as you would be to a friend going through the same situation.",
+      content: "It&apos;s okay to feel the way you do. Remember to be as kind to yourself as you would be to a friend going through the same situation.",
       relatedQuestions: [
         "How can I practice self-compassion?",
         "What would I tell a good friend in this situation?"
@@ -50,7 +50,7 @@ const PerspectiveScreen: React.FC = () => {
       title: "Action",
       content: "Small steps forward are still progress. Focus on what you can control and take one action today that moves you in a positive direction.",
       relatedQuestions: [
-        "What's one small thing I can do today?",
+        "What&apos;s one small thing I can do today?",
         "How can I build momentum from here?"
       ]
     }
@@ -135,7 +135,7 @@ const PerspectiveScreen: React.FC = () => {
           <Input
             value={state.userInput}
             onChange={setUserInput}
-            placeholder="Share what's bothering you, and I'll help you see it differently..."
+            placeholder="Share what&apos;s bothering you, and I&apos;ll help you see it differently..."
             type="textarea"
             rows={6}
           />
@@ -154,8 +154,8 @@ const PerspectiveScreen: React.FC = () => {
         <h3 className="text-lg font-medium mb-3 text-white">Tips for sharing</h3>
         <div className="space-y-2 text-sm text-pink-100">
           <p>• Be as specific as possible about the situation</p>
-          <p>• Include how you're feeling about it</p>
-          <p>• Don't worry about perfect grammar - just express yourself</p>
+          <p>• Include how you&apos;re feeling about it</p>
+          <p>• Don&apos;t worry about perfect grammar - just express yourself</p>
           <p>• Remember, this is a safe space to share</p>
         </div>
       </GlassCard>
@@ -200,7 +200,7 @@ const PerspectiveScreen: React.FC = () => {
               <span className="text-2xl">🤔</span>
             </div>
             <h3 className="text-lg font-medium text-white mb-2">
-              Let's Understand Your Story
+              Let&apos;s Understand Your Story
             </h3>
             <p className="text-pink-100 text-sm">
               A few quick questions so our suggestions really fit your experience

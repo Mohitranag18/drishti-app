@@ -38,7 +38,7 @@ const PerspectiveReviewScreen: React.FC = () => {
           </div>
           <p className="text-white font-medium">Analyzing your situation...</p>
           <p className="text-pink-100 text-sm">
-            I'm finding new ways to help you look at this challenge.
+            I&apos;m finding new ways to help you look at this challenge.
           </p>
         </div>
       </GlassCard>
@@ -61,9 +61,9 @@ const PerspectiveReviewScreen: React.FC = () => {
       <GlassCard>
         <h3 className="text-lg font-medium mb-3 text-white">What happens next?</h3>
         <div className="space-y-2 text-sm text-pink-100">
-          <p>1. I'll ask a few quick questions to understand your situation better</p>
-          <p>2. Based on your responses, I'll provide personalized perspectives</p>
-          <p>3. You'll get actionable steps to help you move forward</p>
+          <p>1. I&apos;ll ask a few quick questions to understand your situation better</p>
+          <p>2. Based on your responses, I&apos;ll provide personalized perspectives</p>
+          <p>3. You&apos;ll get actionable steps to help you move forward</p>
         </div>
       </GlassCard>
     </motion.div>

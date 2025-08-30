@@ -10,7 +10,7 @@ import Input from '../components/Input';
 import ScaleSlider from '../components/ScaleSlider';
 
 const UnderstandScreen: React.FC = () => {
-  const { state, setCurrentView, addResponse } = useApp();
+  const { setCurrentView, addResponse } = useApp();
   const [currentMood, setCurrentMood] = useState('');
   const [panicFrequency, setPanicFrequency] = useState('');
   const [anxietyLevel, setAnxietyLevel] = useState(3);
@@ -117,10 +117,10 @@ const UnderstandScreen: React.FC = () => {
           <GlassCard>
             <h3 className="text-lg font-medium mb-2 text-white">Quick Insight</h3>
             <p className="text-pink-100 text-sm">
-              {currentMood === '😞' && "It's completely understandable to feel disappointed. These feelings are valid and temporary."}
-              {currentMood === '😤' && "I can sense some frustration. Let's channel that energy into positive action."}
-              {currentMood === '😨' && "Anxiety can feel overwhelming, but you're taking a brave step by reflecting on it."}
-              {currentMood === '😊' && "I'm glad you're approaching this with a positive mindset. That's a great foundation for growth."}
+              {currentMood === '😞' && "It&apos;s completely understandable to feel disappointed. These feelings are valid and temporary."}
+              {currentMood === '😤' && "I can sense some frustration. Let&apos;s channel that energy into positive action."}
+              {currentMood === '😨' && "Anxiety can feel overwhelming, but you&apos;re taking a brave step by reflecting on it."}
+              {currentMood === '😊' && "I&apos;m glad you&apos;re approaching this with a positive mindset. That&apos;s a great foundation for growth."}
               {currentMood === '😌' && "Your calm approach to this situation shows emotional maturity and self-awareness."}
             </p>
           </GlassCard>

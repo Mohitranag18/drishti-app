@@ -8,12 +8,12 @@ import PerspectiveCard from '../components/PerspectiveCard';
 import GlassCard from '../components/GlassCard';
 
 const NewWaysScreen: React.FC = () => {
-  const { state } = useApp();
+  const { } = useApp();
 
   const perspectiveCards = [
     {
       title: "Growth",
-      content: "Panicking isn't about knowledge, but about managing test pressure & moments. This setback is a chance to learn a new skill—it's a measure of your worth. How could you prepare for handling panic next time?",
+      content: "Panicking isn&apos;t about knowledge, but about managing test pressure & moments. This setback is a chance to learn a new skill—it&apos;s a measure of your worth. How could you prepare for handling panic next time?",
       relatedQuestions: [
         "What breathing techniques can help during exams?",
         "How do successful people handle test anxiety?"
@@ -21,7 +21,7 @@ const NewWaysScreen: React.FC = () => {
     },
     {
       title: "Kindness", 
-      content: "It's okay to feel disappointed—in yourself or from family. Remember: You tried your best in that moment. How would you comfort a friend who felt this way? Try being that friend for yourself now.",
+      content: "It&apos;s okay to feel disappointed—in yourself or from family. Remember: You tried your best in that moment. How would you comfort a friend who felt this way? Try being that friend for yourself now.",
       relatedQuestions: [
         "How can I practice self-compassion?",
         "What would I tell a good friend in this situation?"

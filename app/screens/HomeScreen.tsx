@@ -10,13 +10,6 @@ import Button from '../components/Button';
 const HomeScreen: React.FC = () => {
   const { state, setSelectedMood, setCurrentView } = useApp();
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -48,14 +41,14 @@ const HomeScreen: React.FC = () => {
       <GlassCard>
         <h3 className="text-lg font-medium mb-2 text-white">Quick Check-in</h3>
         <p className="text-pink-100 text-sm mb-4">
-          What's one thing that's been on your mind today?
+          What&apos;s one thing that&apos;s been on your mind today?
         </p>
         <Button
           onClick={() => setCurrentView('perspective1')}
           variant="secondary"
           fullWidth
         >
-          Share what's on your mind →
+          Share what&apos;s on your mind →
         </Button>
       </GlassCard>
 
@@ -93,10 +86,10 @@ const HomeScreen: React.FC = () => {
               Mood Insights
             </h3>
             <p className="text-pink-100 text-sm">
-              {state.selectedMood === '😊' && "It's wonderful that you're feeling positive! Want to explore what's contributing to this good mood?"}
-              {state.selectedMood === '😐' && "Feeling neutral is completely normal. Sometimes it's good to check in with yourself when you're in this space."}
-              {state.selectedMood === '😔' && "I notice you might be feeling down. Would you like to talk about what's weighing on your mind?"}
-              {state.selectedMood === '😟' && "It seems like something might be troubling you. I'm here to help you work through it."}
+              {state.selectedMood === '😊' && "It&apos;s wonderful that you&apos;re feeling positive! Want to explore what&apos;s contributing to this good mood?"}
+              {state.selectedMood === '😐' && "Feeling neutral is completely normal. Sometimes it&apos;s good to check in with yourself when you&apos;re in this space."}
+              {state.selectedMood === '😔' && "I notice you might be feeling down. Would you like to talk about what&apos;s weighing on your mind?"}
+              {state.selectedMood === '😟' && "It seems like something might be troubling you. I&apos;m here to help you work through it."}
             </p>
           </GlassCard>
         </motion.div>
