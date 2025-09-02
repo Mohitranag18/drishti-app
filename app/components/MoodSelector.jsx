@@ -3,15 +3,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-interface MoodSelectorProps {
-  selectedMood: string;
-  onMoodSelect: (mood: string) => void;
-  moods?: string[];
-}
-
 const defaultMoods = ['😊', '😐', '😔', '😟'];
 
-const MoodSelector: React.FC<MoodSelectorProps> = ({ 
+const MoodSelector = ({ 
   selectedMood, 
   onMoodSelect, 
   moods = defaultMoods 
@@ -40,4 +34,4 @@ const MoodSelector: React.FC<MoodSelectorProps> = ({
   );
 };
 
-export default MoodSelector;
+export default MoodSelector; 

@@ -1,36 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { AppState, ViewType, Question } from '../types';
+import React, { createContext, useContext, useReducer } from 'react';
 
-interface AppContextType {
-  state: AppState;
-  dispatch: React.Dispatch<AppAction>;
-  setCurrentView: (view: ViewType) => void;
-  setUserInput: (input: string) => void;
-  setSelectedMood: (mood: string) => void;
-  addResponse: (questionId: string, answer: string | number) => void;
-  setLoading: (loading: boolean) => void;
-  setPerspectiveStage: (stage: 'input' | 'understanding' | 'solution') => void;
-  setAIQuestions: (questions: Question[]) => void;
-  setCurrentQuestionIndex: (index: number) => void;
-  nextQuestion: () => void;
-  submitInput: () => void;
-  completeUnderstanding: () => void;
-}
-
-type AppAction =
-  | { type: 'SET_CURRENT_VIEW'; payload: ViewType }
-  | { type: 'SET_USER_INPUT'; payload: string }
-  | { type: 'SET_SELECTED_MOOD'; payload: string }
-  | { type: 'ADD_RESPONSE'; payload: { questionId: string; answer: string | number } }
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_PERSPECTIVE_STAGE'; payload: 'input' | 'understanding' | 'solution' }
-  | { type: 'SET_AI_QUESTIONS'; payload: Question[] }
-  | { type: 'SET_CURRENT_QUESTION_INDEX'; payload: number }
-  | { type: 'RESET_STATE' };
-
-const initialState: AppState = {
+const initialState = {
   currentView: 'home',
   userInput: '',
   selectedMood: '',
@@ -41,9 +13,9 @@ const initialState: AppState = {
   currentQuestionIndex: 0,
 };
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
+const AppContext = createContext(undefined);
 
-function appReducer(state: AppState, action: AppAction): AppState {
+function appReducer(state, action) {
   switch (action.type) {
     case 'SET_CURRENT_VIEW':
       return { ...state, currentView: action.payload };
@@ -74,38 +46,38 @@ function appReducer(state: AppState, action: AppAction): AppState {
   }
 }
 
-export function AppProvider({ children }: { children: ReactNode }) {
+export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  const setCurrentView = (view: ViewType) => {
+  const setCurrentView = (view) => {
     dispatch({ type: 'SET_CURRENT_VIEW', payload: view });
   };
 
-  const setUserInput = (input: string) => {
+  const setUserInput = (input) => {
     dispatch({ type: 'SET_USER_INPUT', payload: input });
   };
 
-  const setSelectedMood = (mood: string) => {
+  const setSelectedMood = (mood) => {
     dispatch({ type: 'SET_SELECTED_MOOD', payload: mood });
   };
 
-  const addResponse = (questionId: string, answer: string | number) => {
+  const addResponse = (questionId, answer) => {
     dispatch({ type: 'ADD_RESPONSE', payload: { questionId, answer } });
   };
 
-  const setLoading = (loading: boolean) => {
+  const setLoading = (loading) => {
     dispatch({ type: 'SET_LOADING', payload: loading });
   };
 
-  const setPerspectiveStage = (stage: 'input' | 'understanding' | 'solution') => {
+  const setPerspectiveStage = (stage) => {
     dispatch({ type: 'SET_PERSPECTIVE_STAGE', payload: stage });
   };
 
-  const setAIQuestions = (questions: Question[]) => {
+  const setAIQuestions = (questions) => {
     dispatch({ type: 'SET_AI_QUESTIONS', payload: questions });
   };
 
-  const setCurrentQuestionIndex = (index: number) => {
+  const setCurrentQuestionIndex = (index) => {
     dispatch({ type: 'SET_CURRENT_QUESTION_INDEX', payload: index });
   };
 
@@ -123,7 +95,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Simulate AI processing time
       setTimeout(() => {
         // Mock AI questions based on user input
-        const mockQuestions: Question[] = [
+        const mockQuestions = [
           {
             id: 'mood',
             text: "How are you feeling about this right now?",
@@ -185,4 +157,4 @@ export function useApp() {
     throw new Error('useApp must be used within an AppProvider');
   }
   return context;
-}
+} 

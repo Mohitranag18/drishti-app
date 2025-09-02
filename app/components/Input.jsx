@@ -3,17 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-interface InputProps {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  type?: 'text' | 'textarea';
-  rows?: number;
-  className?: string;
-  disabled?: boolean;
-}
-
-const Input: React.FC<InputProps> = ({
+const Input = ({
   value,
   onChange,
   placeholder = '',
@@ -49,4 +39,4 @@ const Input: React.FC<InputProps> = ({
   );
 };
 
-export default Input;
+export default Input; 

@@ -4,18 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 
-interface ButtonProps {
-  children: React.ReactNode;
-  onClick?: () => void;
-  variant?: 'primary' | 'secondary' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
-  fullWidth?: boolean;
-  disabled?: boolean;
-  loading?: boolean;
-  className?: string;
-}
-
-const Button: React.FC<ButtonProps> = ({
+const Button = ({
   children,
   onClick,
   variant = 'primary',
@@ -63,4 +52,4 @@ const Button: React.FC<ButtonProps> = ({
   );
 };
 
-export default Button;
+export default Button; 

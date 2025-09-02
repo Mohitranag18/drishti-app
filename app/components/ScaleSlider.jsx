@@ -3,16 +3,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
-interface ScaleSliderProps {
-  min?: number;
-  max?: number;
-  value: number;
-  onChange: (value: number) => void;
-  label?: string;
-  className?: string;
-}
-
-const ScaleSlider: React.FC<ScaleSliderProps> = ({
+const ScaleSlider = ({
   min = 1,
   max = 5,
   value,
@@ -22,7 +13,7 @@ const ScaleSlider: React.FC<ScaleSliderProps> = ({
 }) => {
   const [isDragging, setIsDragging] = useState(false);
 
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSliderChange = (e) => {
     onChange(Number(e.target.value));
   };
 
@@ -82,4 +73,4 @@ const ScaleSlider: React.FC<ScaleSliderProps> = ({
   );
 };
 
-export default ScaleSlider;
+export default ScaleSlider; 

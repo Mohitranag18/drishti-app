@@ -3,16 +3,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
-import GlassCard from './GlassCard';
+import GlassCard from './GlassCard.jsx';
 
-interface PerspectiveCardProps {
-  title: string;
-  content: string;
-  relatedQuestions?: string[];
-  index: number;
-}
-
-const PerspectiveCard: React.FC<PerspectiveCardProps> = ({
+const PerspectiveCard = ({
   title,
   content,
   relatedQuestions = [],
@@ -40,7 +33,7 @@ const PerspectiveCard: React.FC<PerspectiveCardProps> = ({
               {relatedQuestions.map((question, idx) => (
                 <button
                   key={idx}
-                  className="flex items-center justify-between w-full text-left text-sm text-pink-200 hover:text-white transition-colors py-2 hover:bg-white/10 rounded-lg px-2"
+                  className="flex items-center justify-between w-full text-left text-sm text-pink-100 hover:text-white transition-colors py-2 hover:bg-white/10 rounded-lg px-2"
                 >
                   <span className="flex-1">{question}</span>
                   <Plus className="w-4 h-4 ml-2 flex-shrink-0" />
@@ -54,4 +47,4 @@ const PerspectiveCard: React.FC<PerspectiveCardProps> = ({
   );
 };
 
-export default PerspectiveCard;
+export default PerspectiveCard; 

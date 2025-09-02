@@ -3,14 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-interface GlassCardProps {
-  children: React.ReactNode;
-  className?: string;
-  onClick?: () => void;
-  animate?: boolean;
-}
-
-const GlassCard: React.FC<GlassCardProps> = ({ 
+const GlassCard = ({ 
   children, 
   className = '', 
   onClick,
@@ -43,4 +36,4 @@ const GlassCard: React.FC<GlassCardProps> = ({
   return cardContent;
 };
 
-export default GlassCard;
+export default GlassCard; 
