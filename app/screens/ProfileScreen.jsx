@@ -54,7 +54,7 @@ const ProfileScreen = () => {
         <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
           <Icon className="w-5 h-5 text-blue-600" />
         </div>
-        <span className="text-gray-900 font-medium">{label}</span>
+        <span className="text-gray-900 font-medium text-sm">{label}</span>
       </div>
       <motion.button
         onClick={onToggle}
@@ -89,7 +89,7 @@ const ProfileScreen = () => {
         }`}>
           <Icon className={`w-5 h-5 ${variant === 'danger' ? 'text-red-600' : 'text-gray-600'}`} />
         </div>
-        <span className="font-medium">{label}</span>
+        <span className="font-medium text-sm">{label}</span>
       </div>
       {showArrow && <ChevronRight className="w-5 h-5 text-gray-400" />}
     </motion.button>
@@ -242,7 +242,7 @@ const ProfileScreen = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Account</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Account</h2>
             <div className="space-y-3">
               <div className="flex items-center space-x-3 py-4 px-4 bg-white rounded-xl border border-gray-200 shadow-sm">
                 <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
@@ -250,7 +250,7 @@ const ProfileScreen = () => {
                 </div>
                 <div className="flex-1">
                   <span className="text-gray-500 text-sm">Email</span>
-                  <p className="text-gray-900 font-medium">{userEmail}</p>
+                  <p className="text-gray-900 font-medium text-sm">{userEmail}</p>
                 </div>
               </div>
               
@@ -275,7 +275,7 @@ const ProfileScreen = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Preferences</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Preferences</h2>
             <div className="space-y-3">
               <SwitchToggle
                 isOn={notifications}
@@ -313,7 +313,7 @@ const ProfileScreen = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
           >
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Support & Legal</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Support & Legal</h2>
             <div className="space-y-3">
               <MenuItem
                 icon={HelpCircle}
