@@ -3,8 +3,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Send, RotateCcw, Lightbulb, Heart, Target, TrendingUp } from 'lucide-react';
+import ProtectedRoute from '../components/ProtectedRoute';
+import { useApp } from '../context/AppContext';
 
 const PerspectiveScreen = () => {
+  const { setCurrentView } = useApp();
   const [currentStage, setCurrentStage] = useState('input'); // 'input', 'understanding', 'solution'
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +25,7 @@ const PerspectiveScreen = () => {
     transition: { duration: 0.4 }
   };
 
-  const feelingEmojis = ['😞', '😤', '😨', '😊', '😌'];
+  const feelingEmojis = ['😞', '😤', '��', '😊', '😌'];
   
   const panicOptions = [
     { key: 'first', label: 'First time' },
@@ -448,66 +451,68 @@ const PerspectiveScreen = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
-      <div className="px-4 sm:px-6 lg:px-8 pb-24 max-w-md mx-auto">
-        
-        {/* Header */}
-        <motion.div 
-          className="pt-12 pb-6"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="flex items-center space-x-3 mb-4">
-            {currentStage !== 'input' && (
-              <motion.button
-                onClick={() => setCurrentStage(currentStage === 'solution' ? 'understanding' : 'input')}
-                className="p-2 hover:bg-white/50 rounded-full transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </motion.button>
-            )}
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                {getTitle()}
-              </h1>
-              <p className="text-gray-600 text-sm">
-                {getSubtitle()}
-              </p>
-            </div>
-          </div>
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+        <div className="px-4 sm:px-6 lg:px-8 pb-24 max-w-md mx-auto">
           
-          {/* Progress Indicator */}
-          <div className="flex items-center space-x-2">
-            <div className="flex-1 bg-gray-200 rounded-full h-1.5">
-              <motion.div
-                className="bg-blue-600 h-1.5 rounded-full"
-                initial={{ width: "33%" }}
-                animate={{ 
-                  width: currentStage === 'input' ? "33%" : 
-                         currentStage === 'understanding' ? "66%" : "100%" 
-                }}
-                transition={{ duration: 0.5 }}
-              />
+          {/* Header */}
+          <motion.div 
+            className="pt-12 pb-6"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="flex items-center space-x-3 mb-4">
+              {currentStage !== 'input' && (
+                <motion.button
+                  onClick={() => setCurrentStage(currentStage === 'solution' ? 'understanding' : 'input')}
+                  className="p-2 hover:bg-white/50 rounded-full transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <ArrowLeft className="w-5 h-5 text-gray-600" />
+                </motion.button>
+              )}
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  {getTitle()}
+                </h1>
+                <p className="text-gray-600 text-sm">
+                  {getSubtitle()}
+                </p>
+              </div>
             </div>
-            <span className="text-xs text-gray-500 font-medium">
-              {currentStage === 'input' && 'Step 1 of 3'}
-              {currentStage === 'understanding' && 'Step 2 of 3'}
-              {currentStage === 'solution' && 'Complete'}
-            </span>
-          </div>
-        </motion.div>
+            
+            {/* Progress Indicator */}
+            <div className="flex items-center space-x-2">
+              <div className="flex-1 bg-gray-200 rounded-full h-1.5">
+                <motion.div
+                  className="bg-blue-600 h-1.5 rounded-full"
+                  initial={{ width: "33%" }}
+                  animate={{ 
+                    width: currentStage === 'input' ? "33%" : 
+                           currentStage === 'understanding' ? "66%" : "100%" 
+                  }}
+                  transition={{ duration: 0.5 }}
+                />
+              </div>
+              <span className="text-xs text-gray-500 font-medium">
+                {currentStage === 'input' && 'Step 1 of 3'}
+                {currentStage === 'understanding' && 'Step 2 of 3'}
+                {currentStage === 'solution' && 'Complete'}
+              </span>
+            </div>
+          </motion.div>
 
-        {/* Content */}
-        <AnimatePresence mode="wait">
-          {currentStage === 'input' && renderInputStage()}
-          {currentStage === 'understanding' && renderUnderstandingStage()}
-          {currentStage === 'solution' && renderSolutionStage()}
-        </AnimatePresence>
+          {/* Content */}
+          <AnimatePresence mode="wait">
+            {currentStage === 'input' && renderInputStage()}
+            {currentStage === 'understanding' && renderUnderstandingStage()}
+            {currentStage === 'solution' && renderSolutionStage()}
+          </AnimatePresence>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 };
 

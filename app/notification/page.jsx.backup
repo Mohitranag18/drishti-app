@@ -1,0 +1,35 @@
+'use client';
+import React from 'react';
+import ProtectedRoute from '../components/ProtectedRoute';
+import ScreenWrapper from '../components/ScreenWrapper';
+import GlassCard from '../components/GlassCard';
+import Button from '../components/Button';
+import { useApp } from '../context/AppContext';
+
+const NotificationsScreen = () => {
+  const { dispatch } = useApp();
+
+  return (
+    <ProtectedRoute>
+      <ScreenWrapper>
+        <GlassCard>
+          <h1 className="text-2xl font-bold text-white mb-4">Notifications</h1>
+          <p className="text-white/80 mb-6">
+            Stay updated with your wellness journey and important reminders.
+          </p>
+          
+          <div className="space-y-4">
+            <Button 
+              onClick={() => dispatch({ type: 'SET_VIEW', payload: 'home' })}
+              variant="secondary"
+            >
+              Back to Home
+            </Button>
+          </div>
+        </GlassCard>
+      </ScreenWrapper>
+    </ProtectedRoute>
+  );
+};
+
+export default NotificationsScreen;

@@ -2,13 +2,15 @@
 
 import React from 'react';
 import { AppProvider, useApp } from './context/AppContext.jsx';
+import { useAuth } from './context/AuthContext.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Header from './components/Header.jsx';
 import Navigation from './components/Navigation.jsx';
-import HomeScreen from './screens/HomeScreen.jsx';
-import PerspectiveScreen from './screens/PerspectiveScreen.jsx';
-import ProfileScreen from './screens/ProfileScreen.jsx';
-import NotificationsScreen from './screens/NotificationsScreen.jsx';
-import JournalScreen from './screens/JournalScreen.jsx';
+import HomeScreen from './home/page.jsx';
+import PerspectiveScreen from './perspective/page.jsx';
+import ProfileScreen from './profile/page.jsx';
+import NotificationsScreen from './notification/page.jsx';
+import JournalScreen from './journal/page.jsx';
 
 const AppContent = () => {
   const { state } = useApp();
@@ -51,8 +53,10 @@ const AppContent = () => {
 
 export default function Home() {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <ProtectedRoute>
+      <AppProvider>
+        <AppContent />
+      </AppProvider>
+    </ProtectedRoute>
   );
-} 
+}
