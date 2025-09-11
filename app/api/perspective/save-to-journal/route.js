@@ -38,24 +38,29 @@ export async function POST(request) {
     }
 
     // Create journal entry
-    const cardsContent = session.cards.map(card => 
+    const cardsContent = session.cards.map(card =>
       `**${card.title}**\n${card.content}`
     ).join('\n\n');
 
-    const journalContent = `**Original Situation:**\n${session.user_input}\n\n**Perspective Insights:**\n${cardsContent}`;
-    
-    const journalSummary = `Perspective session insights for challenges and growth opportunities.`;
+    const journalContent = `**Original Situation:**\n${session.user_input}\n\n**Perspective Insights:**\n\n${cardsContent}`;
+    const journalTitle = `Perspective Session - ${new Date().toLocaleDateString()}`;
+    const journalSummary = `Gained new perspectives on challenges through guided reflection and insights.`;
+
+    // Calculate points based on content length and session completion
+    const basePoints = 25; // Base points for saving to journal
+    const contentBonus = Math.min(Math.floor(journalContent.length / 20), 25);
+    const totalPoints = basePoints + contentBonus;
 
     const journal = await prisma.journal.create({
       data: {
         user_id: user.id,
         date: session.date,
         mood_emoji: '🧠', // Brain emoji for perspective sessions
-        title: 'Perspective Session Insights',
+        title: journalTitle,
         content: journalContent,
         summary: journalSummary,
-        points_earned: 25, // Additional points for saving to journal
-        tags: JSON.stringify(['perspective', 'growth', 'mindset'])
+        points_earned: totalPoints,
+        tags: JSON.stringify(['perspective', 'growth', 'mindset', 'reflection'])
       }
     });
 
@@ -69,15 +74,15 @@ export async function POST(request) {
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        total_points: { increment: 25 }
+        total_points: { increment: totalPoints }
       }
     });
 
     return NextResponse.json({
       success: true,
       journalId: journal.id,
-      pointsEarned: 25,
-      message: 'Session saved to journal successfully'
+      pointsEarned: totalPoints,
+      message: 'Perspective session saved to journal successfully'
     });
 
   } catch (error) {
