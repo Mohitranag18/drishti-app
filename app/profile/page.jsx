@@ -1,6 +1,6 @@
 'use client';
-
-import React, { useState } from 'react';
+ 
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
@@ -18,7 +18,8 @@ import {
   ChevronRight,
   Edit3,
   Settings,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useApp } from '../context/AppContext';
@@ -26,14 +27,46 @@ import { useAuth } from '../context/AuthContext';
 
 const ProfileScreen = () => {
   const { setCurrentView } = useApp();
-  const { user, logout } = useAuth();
-  const [darkMode, setDarkMode] = useState(false);
-  const [notifications, setNotifications] = useState(true);
-  const [wellnessReminders, setWellnessReminders] = useState(true);
-  const [weeklyDelivery, setWeeklyDelivery] = useState(true);
+  const { user, logout, updateUser } = useAuth();
+  
+  // Profile states
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [userEmail, setUserEmail] = useState(user?.email || 'user@example.com');
-  const [displayName, setDisplayName] = useState(user ? `${user.first_name} ${user.last_name}` : '');
+  
+  // User preferences states (synced with user data)
+  const [preferences, setPreferences] = useState({
+    push_notification: user?.push_notification || false,
+    dark_mode: user?.dark_mode || false,
+    wellness_reminders: user?.wellness_reminders || false,
+    weekly_summary: user?.weekly_summary || false
+  });
+  
+  // Edit form states
+  const [editForm, setEditForm] = useState({
+    first_name: user?.first_name || '',
+    last_name: user?.last_name || '',
+    username: user?.username || '',
+    email: user?.email || ''
+  });
+
+  // Update preferences when user data changes
+  useEffect(() => {
+    if (user) {
+      setPreferences({
+        push_notification: user.push_notification,
+        dark_mode: user.dark_mode,
+        wellness_reminders: user.wellness_reminders,
+        weekly_summary: user.weekly_summary
+      });
+      setEditForm({
+        first_name: user.first_name,
+        last_name: user.last_name,
+        username: user.username,
+        email: user.email
+      });
+    }
+  }, [user]);
 
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
@@ -41,8 +74,78 @@ const ProfileScreen = () => {
     transition: { duration: 0.4 }
   };
 
-  const toggleSwitch = (setter, currentValue) => {
-    setter(!currentValue);
+  // Update user preferences
+  const updatePreference = async (key, value) => {
+    try {
+      setIsUpdating(true);
+      
+      const response = await fetch('/api/user/preferences', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          [key]: value
+        })
+      });
+
+      if (response.ok) {
+        const updatedUser = await response.json();
+        updateUser(updatedUser.user);
+        setPreferences(prev => ({
+          ...prev,
+          [key]: value
+        }));
+      } else {
+        console.error('Failed to update preference');
+        // Revert the change if it failed
+        setPreferences(prev => ({
+          ...prev,
+          [key]: !value
+        }));
+      }
+    } catch (error) {
+      console.error('Error updating preference:', error);
+      // Revert the change if it failed
+      setPreferences(prev => ({
+        ...prev,
+        [key]: !value
+      }));
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Handle profile update
+  const handleProfileUpdate = async () => {
+    try {
+      setIsLoading(true);
+      
+      const response = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(editForm)
+      });
+
+      if (response.ok) {
+        const updatedUser = await response.json();
+        updateUser(updatedUser.user);
+        setShowEditModal(false);
+      } else {
+        const error = await response.json();
+        console.error('Failed to update profile:', error.message);
+        alert(error.message || 'Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Error updating profile');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -51,23 +154,27 @@ const ProfileScreen = () => {
     }
   };
 
-  const SwitchToggle = ({ isOn, onToggle, label, icon: Icon }) => (
+  const SwitchToggle = ({ isOn, onToggle, label, icon: Icon, disabled = false }) => (
     <motion.div 
-      className="flex items-center justify-between py-4 px-4 bg-white rounded-xl border border-gray-200 shadow-sm"
-      whileHover={{ scale: 1.01, y: -1 }}
+      className={`flex items-center justify-between py-4 px-4 bg-white rounded-xl border border-gray-200 shadow-sm ${
+        disabled ? 'opacity-50' : ''
+      }`}
+      whileHover={!disabled ? { scale: 1.01, y: -1 } : {}}
     >
       <div className="flex items-center space-x-3">
         <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
           <Icon className="w-5 h-5 text-blue-600" />
         </div>
         <span className="text-gray-900 font-medium">{label}</span>
+        {disabled && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
       </div>
       <motion.button
         onClick={onToggle}
+        disabled={disabled}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
           isOn ? 'bg-blue-600' : 'bg-gray-300'
-        }`}
-        whileTap={{ scale: 0.95 }}
+        } ${disabled ? 'cursor-not-allowed' : ''}`}
+        whileTap={!disabled ? { scale: 0.95 } : {}}
       >
         <motion.span
           className="inline-block h-4 w-4 transform rounded-full bg-white shadow-sm"
@@ -119,6 +226,7 @@ const ProfileScreen = () => {
           <button
             onClick={() => setShowEditModal(false)}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            disabled={isLoading}
           >
             <X className="w-5 h-5 text-gray-500" />
           </button>
@@ -127,26 +235,53 @@ const ProfileScreen = () => {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
+              First Name
             </label>
             <input
-              type="email"
-              value={userEmail}
-              onChange={(e) => setUserEmail(e.target.value)}
+              type="text"
+              value={editForm.first_name}
+              onChange={(e) => setEditForm(prev => ({ ...prev, first_name: e.target.value }))}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isLoading}
             />
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Display Name
+              Last Name
             </label>
             <input
               type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Your preferred name"
+              value={editForm.last_name}
+              onChange={(e) => setEditForm(prev => ({ ...prev, last_name: e.target.value }))}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Username
+            </label>
+            <input
+              type="text"
+              value={editForm.username}
+              onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email Address
+            </label>
+            <input
+              type="email"
+              value={editForm.email}
+              onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isLoading}
             />
           </div>
         </div>
@@ -157,24 +292,35 @@ const ProfileScreen = () => {
             className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            disabled={isLoading}
           >
             Cancel
           </motion.button>
           <motion.button
-            onClick={() => {
-              setShowEditModal(false);
-              // Handle save logic here - could update backend
-            }}
-            className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+            onClick={handleProfileUpdate}
+            className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium flex items-center justify-center"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            disabled={isLoading}
           >
-            Save Changes
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              'Save Changes'
+            )}
           </motion.button>
         </div>
       </motion.div>
     </motion.div>
   );
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <ProtectedRoute>
@@ -206,25 +352,28 @@ const ProfileScreen = () => {
                   <div className="flex items-center space-x-4">
                     <div className="relative">
                       <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
-                        {user ? (
-                          <span className="text-2xl font-bold text-white">
-                            {user.first_name?.[0]}{user.last_name?.[0]}
-                          </span>
-                        ) : (
-                          <User className="w-8 h-8 text-white" />
-                        )}
+                        <span className="text-2xl font-bold text-white">
+                          {user.first_name?.[0]?.toUpperCase()}{user.last_name?.[0]?.toUpperCase()}
+                        </span>
                       </div>
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
-                      </div>
+                      {user.is_verified && (
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        </div>
+                      )}
                     </div>
                     <div>
                       <h2 className="text-lg font-semibold text-gray-900">
-                        {user ? `${user.first_name} ${user.last_name}` : userEmail}
+                        {user.first_name} {user.last_name}
                       </h2>
                       <p className="text-gray-500 text-sm">
-                        {user ? `@${user.username}` : 'Wellness Member'}
+                        @{user.username}
                       </p>
+                      {!user.is_verified && (
+                        <p className="text-orange-500 text-xs mt-1">
+                          Email not verified
+                        </p>
+                      )}
                     </div>
                   </div>
                   <motion.button
@@ -241,21 +390,21 @@ const ProfileScreen = () => {
                 <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-gray-900">
-                      {user?.sessions || 12}
+                      {user.sessions}
                     </div>
                     <div className="text-xs text-gray-500">Sessions</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-gray-900">
-                      {user?.current_streak || 7}
+                      {user.current_streak}
                     </div>
                     <div className="text-xs text-gray-500">Day Streak</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-gray-900">
-                      {user?.total_points || 85}%
+                      {user.total_points}
                     </div>
-                    <div className="text-xs text-gray-500">Progress</div>
+                    <div className="text-xs text-gray-500">Points</div>
                   </div>
                 </div>
               </div>
@@ -275,7 +424,7 @@ const ProfileScreen = () => {
                   </div>
                   <div className="flex-1">
                     <span className="text-gray-500 text-sm">Email</span>
-                    <p className="text-gray-900 font-medium">{user?.email || userEmail}</p>
+                    <p className="text-gray-900 font-medium">{user.email}</p>
                   </div>
                 </div>
                 
@@ -303,31 +452,35 @@ const ProfileScreen = () => {
               <h2 className="text-xl font-bold text-gray-900 mb-4">Preferences</h2>
               <div className="space-y-3">
                 <SwitchToggle
-                  isOn={notifications}
-                  onToggle={() => toggleSwitch(setNotifications, notifications)}
+                  isOn={preferences.push_notification}
+                  onToggle={() => updatePreference('push_notification', !preferences.push_notification)}
                   label="Push Notifications"
                   icon={Bell}
+                  disabled={isUpdating}
                 />
                 
                 <SwitchToggle
-                  isOn={darkMode}
-                  onToggle={() => toggleSwitch(setDarkMode, darkMode)}
+                  isOn={preferences.dark_mode}
+                  onToggle={() => updatePreference('dark_mode', !preferences.dark_mode)}
                   label="Dark Mode"
-                  icon={darkMode ? Moon : Sun}
+                  icon={preferences.dark_mode ? Moon : Sun}
+                  disabled={isUpdating}
                 />
                 
                 <SwitchToggle
-                  isOn={wellnessReminders}
-                  onToggle={() => toggleSwitch(setWellnessReminders, wellnessReminders)}
+                  isOn={preferences.wellness_reminders}
+                  onToggle={() => updatePreference('wellness_reminders', !preferences.wellness_reminders)}
                   label="Wellness Reminders"
                   icon={Target}
+                  disabled={isUpdating}
                 />
                 
                 <SwitchToggle
-                  isOn={weeklyDelivery}
-                  onToggle={() => toggleSwitch(setWeeklyDelivery, weeklyDelivery)}
+                  isOn={preferences.weekly_summary}
+                  onToggle={() => updatePreference('weekly_summary', !preferences.weekly_summary)}
                   label="Weekly Summary"
                   icon={Calendar}
+                  disabled={isUpdating}
                 />
               </div>
             </motion.section>

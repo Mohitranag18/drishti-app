@@ -548,47 +548,55 @@ const PerspectiveScreen = () => {
       </motion.div>
 
       {/* Perspective Cards */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         {perspectiveCards.map((card, index) => {
           const IconComponent = getCardIcon(card.type);
           const gradientClass = getCardGradient(card.type);
-          
+
           return (
             <motion.div
               key={index}
-              className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
+              className="bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-xl overflow-hidden transition-all duration-300"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 + index * 0.1 }}
             >
-              <div 
+              <div
                 className="cursor-pointer"
                 onClick={() => handleCardFlip(index)}
               >
-                <div className={`h-24 bg-gradient-to-r ${gradientClass} flex items-center justify-center relative`}>
+                {/* Card Header */}
+                <div
+                  className={`h-28 bg-gradient-to-r ${gradientClass} flex items-center justify-center relative group`}
+                >
                   <div className="text-center">
-                    <IconComponent className="w-8 h-8 text-white mx-auto mb-2" />
-                    <h3 className="text-white font-semibold">{card.title}</h3>
+                    <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <IconComponent className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-white font-semibold text-lg">{card.title}</h3>
                   </div>
-                  <div className="absolute top-2 right-2">
+
+                  {/* Rotate Icon */}
+                  <div className="absolute top-3 right-3">
                     <motion.div
                       animate={{ rotate: flippedCards.has(index) ? 180 : 0 }}
                       transition={{ duration: 0.3 }}
-                      className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center"
+                      className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:bg-white/30 transition-colors"
                     >
-                      <RotateCcw className="w-3 h-3 text-white" />
+                      <RotateCcw className="w-3.5 h-3.5 text-white" />
                     </motion.div>
                   </div>
                 </div>
-                
+
+                {/* Expanded Content */}
                 <AnimatePresence>
                   {flippedCards.has(index) && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="p-6 border-t border-gray-100"
+                      transition={{ duration: 0.35 }}
+                      className="p-6 border-t border-gray-100 bg-gradient-to-b from-gray-50 to-white"
                     >
                       <p className="text-gray-700 text-sm leading-relaxed">
                         {card.content}
@@ -601,6 +609,7 @@ const PerspectiveScreen = () => {
           );
         })}
       </div>
+
 
       {/* Action Buttons */}
       <div className="grid grid-cols-2 gap-3">
