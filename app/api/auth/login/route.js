@@ -1,6 +1,6 @@
 // app/api/auth/login/route.js
-import { comparePassword, generateToken } from '../../../lib/auth';
-import { prisma } from '../../../lib/prisma';
+import { comparePassword, generateToken } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
 import { NextResponse } from 'next/server';
 
 export async function POST(request) {

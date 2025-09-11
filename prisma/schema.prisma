@@ -1,10 +1,10 @@
-// prisma/schema.prisma
+// prisma/schema.prisma - Updated version with minor fixes
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite" // or "sqlite" for development
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -27,13 +27,13 @@ model User {
   wellness_reminders Boolean @default(true)
   weekly_summary    Boolean  @default(true)
   sessions          Int      @default(0)
-
+  
   // Relations
   moods             Mood[]
   perspective_sessions PerspectiveSession[]
   journals          Journal[]
   notifications     Notification[]
-
+  
   @@map("users")
 }
 
@@ -45,9 +45,9 @@ model Mood {
   week      Int
   month     Int
   mood_rate Int      // 1-5
-
+  
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
+  
   @@map("moods")
 }
 
@@ -63,11 +63,11 @@ model PerspectiveSession {
   status           String   @default("input") // input/understanding/completed
   completed_at     DateTime?
   saved_to_journal Boolean  @default(false)
-
+  
   user             User @relation(fields: [user_id], references: [id], onDelete: Cascade)
   quizzes          PerspectiveQuizz[]
   cards            PerspectiveCard[]
-
+  
   @@map("perspective_sessions")
 }
 
@@ -83,9 +83,9 @@ model PerspectiveQuizz {
   scale_min     Int?     @default(1)
   scale_max     Int?     @default(5)
   mcq_options   Json?    // ["a","b","c","d"]
-
+  
   session PerspectiveSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
-
+  
   @@map("perspective_quizzes")
 }
 
@@ -95,9 +95,9 @@ model PerspectiveCard {
   title      String
   content    String
   card_type  String
-
+  
   session PerspectiveSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
-
+  
   @@map("perspective_cards")
 }
 
@@ -113,9 +113,9 @@ model Journal {
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
   tags          Json?    // ["tag1", "tag2"]
-
+  
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
+  
   @@map("journals")
 }
 
@@ -129,8 +129,8 @@ model Notification {
   scheduled_for DateTime?
   sent_at       DateTime?
   created_at    DateTime  @default(now())
-
+  
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
+  
   @@map("notifications")
 }

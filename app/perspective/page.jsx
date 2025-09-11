@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Send, RotateCcw, Lightbulb, Heart, Target, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Send, RotateCcw, Lightbulb, Heart, Target, TrendingUp, Sparkles } from 'lucide-react';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useApp } from '../context/AppContext';
 
@@ -12,57 +12,18 @@ const PerspectiveScreen = () => {
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [flippedCards, setFlippedCards] = useState(new Set());
-  
-  // Form states for understanding stage
-  const [currentMood, setCurrentMood] = useState('');
-  const [panicFrequency, setPanicFrequency] = useState('');
-  const [anxietyLevel, setAnxietyLevel] = useState(3);
-  const [situationContext, setSituationContext] = useState('');
+  const [sessionId, setSessionId] = useState(null);
+  const [quizQuestions, setQuizQuestions] = useState([]);
+  const [quizAnswers, setQuizAnswers] = useState({});
+  const [perspectiveCards, setPerspectiveCards] = useState([]);
+  const [pointsEarned, setPointsEarned] = useState(0);
+  const [error, setError] = useState('');
 
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.4 }
   };
-
-  const feelingEmojis = ['😞', '😤', '��', '😊', '😌'];
-  
-  const panicOptions = [
-    { key: 'first', label: 'First time' },
-    { key: 'sometimes', label: 'Sometimes' },
-    { key: 'every', label: 'Every time' },
-    { key: 'not-sure', label: 'Not sure' }
-  ];
-
-  const contextOptions = [
-    { key: 'work', label: 'Work/School' },
-    { key: 'relationships', label: 'Relationships' },
-    { key: 'family', label: 'Family' },
-    { key: 'health', label: 'Health' },
-    { key: 'financial', label: 'Financial' },
-    { key: 'other', label: 'Other' }
-  ];
-
-  const perspectiveCards = [
-    {
-      title: "Growth Mindset",
-      content: "This challenge is an opportunity to develop new skills and resilience. Every difficult situation teaches us something valuable about ourselves and how we handle adversity.",
-      color: "from-blue-400 to-indigo-500",
-      icon: TrendingUp
-    },
-    {
-      title: "Self-Compassion", 
-      content: "It's okay to feel the way you do. Be as kind to yourself as you would be to a close friend going through the same situation.",
-      color: "from-emerald-400 to-cyan-500",
-      icon: Heart
-    },
-    {
-      title: "Positive Action",
-      content: "Small steps forward are still progress. Focus on what you can control and take one positive action today that moves you in a positive direction.",
-      color: "from-purple-400 to-pink-500",
-      icon: Target
-    }
-  ];
 
   const getTitle = () => {
     if (currentStage === 'input') return "What's on your mind?";
@@ -78,21 +39,166 @@ const PerspectiveScreen = () => {
     return "Share what's bothering you, and I'll help you see it differently";
   };
 
-  const handleSubmitInput = () => {
-    if (!userInput.trim()) return;
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setCurrentStage('understanding');
-    }, 2000);
+  const getAuthToken = () => {
+    return localStorage.getItem('token');
   };
 
-  const handleCompleteUnderstanding = () => {
+  const handleSubmitInput = async () => {
+    if (!userInput.trim()) return;
+    
     setIsLoading(true);
-    setTimeout(() => {
+    setError('');
+
+    try {
+      const token = getAuthToken();
+      const response = await fetch('/api/perspective/create-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ userInput: userInput.trim() })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create session');
+      }
+
+      setSessionId(data.sessionId);
+      
+      // Generate quiz questions
+      await generateQuizQuestions(data.sessionId);
+
+    } catch (err) {
+      setError(err.message);
+      console.error('Error creating session:', err);
+    } finally {
       setIsLoading(false);
+    }
+  };
+
+  const generateQuizQuestions = async (sessionId) => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch('/api/perspective/generate-quiz', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          sessionId, 
+          userInput: userInput.trim()
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate quiz');
+      }
+
+      setQuizQuestions(data.questions);
+      setCurrentStage('understanding');
+
+    } catch (err) {
+      setError(err.message);
+      console.error('Error generating quiz:', err);
+    }
+  };
+
+  const handleQuizAnswer = (questionId, value) => {
+    setQuizAnswers(prev => ({
+      ...prev,
+      [questionId]: value
+    }));
+  };
+
+  const handleCompleteUnderstanding = async () => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const token = getAuthToken();
+      
+      // Submit answers
+      const answersArray = Object.entries(quizAnswers).map(([questionId, value]) => ({
+        questionId,
+        value
+      }));
+
+      const submitResponse = await fetch('/api/perspective/submit-answers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          sessionId, 
+          answers: answersArray
+        })
+      });
+
+      if (!submitResponse.ok) {
+        const errorData = await submitResponse.json();
+        throw new Error(errorData.error || 'Failed to submit answers');
+      }
+
+      // Generate perspective cards
+      const cardsResponse = await fetch('/api/perspective/generate-cards', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ sessionId })
+      });
+
+      const cardsData = await cardsResponse.json();
+
+      if (!cardsResponse.ok) {
+        throw new Error(cardsData.error || 'Failed to generate perspective cards');
+      }
+
+      setPerspectiveCards(cardsData.cards);
+      setPointsEarned(cardsData.pointsEarned);
       setCurrentStage('solution');
-    }, 1500);
+
+    } catch (err) {
+      setError(err.message);
+      console.error('Error completing understanding:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSaveToJournal = async () => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch('/api/perspective/save-to-journal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ sessionId })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save to journal');
+      }
+
+      setPointsEarned(prev => prev + data.pointsEarned);
+      alert(`Saved to journal! You earned ${data.pointsEarned} bonus points.`);
+
+    } catch (err) {
+      setError(err.message);
+      console.error('Error saving to journal:', err);
+    }
   };
 
   const handleCardFlip = (index) => {
@@ -108,14 +214,156 @@ const PerspectiveScreen = () => {
   const resetToInput = () => {
     setCurrentStage('input');
     setUserInput('');
-    setCurrentMood('');
-    setPanicFrequency('');
-    setSituationContext('');
-    setAnxietyLevel(3);
+    setSessionId(null);
+    setQuizQuestions([]);
+    setQuizAnswers({});
+    setPerspectiveCards([]);
+    setPointsEarned(0);
     setFlippedCards(new Set());
+    setError('');
   };
 
-  const isUnderstandingFormValid = currentMood && panicFrequency && situationContext;
+  const isUnderstandingFormValid = () => {
+    return quizQuestions.every(q => quizAnswers[q.id] !== undefined && quizAnswers[q.id] !== '');
+  };
+
+  const renderQuizQuestion = (question, index) => {
+    const value = quizAnswers[question.id] || '';
+
+    switch (question.type) {
+      case 'text':
+        return (
+          <div key={question.id} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">
+              {question.question}
+            </h3>
+            <textarea
+              value={value}
+              onChange={(e) => handleQuizAnswer(question.id, e.target.value)}
+              placeholder={question.placeholder}
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
+            />
+          </div>
+        );
+
+      case 'multiple_choice':
+        return (
+          <div key={question.id} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">
+              {question.question}
+            </h3>
+            <div className="grid grid-cols-1 gap-3">
+              {question.options.map((option, optionIndex) => (
+                <motion.button
+                  key={optionIndex}
+                  onClick={() => handleQuizAnswer(question.id, option)}
+                  className={`text-sm p-3 rounded-xl transition-colors border text-left ${
+                    value === option
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {option}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'scale':
+        return (
+          <div key={question.id} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">
+              {question.question} ({value || question.min}/{question.max})
+            </h3>
+            <div className="space-y-4">
+              <input
+                type="range"
+                min={question.min}
+                max={question.max}
+                value={value || question.min}
+                onChange={(e) => handleQuizAnswer(question.id, parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+              />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>{question.minLabel || 'Low'}</span>
+                <span>{question.maxLabel || 'High'}</span>
+              </div>
+            </div>
+            <style jsx>{`
+              .slider::-webkit-slider-thumb {
+                appearance: none;
+                height: 20px;
+                width: 20px;
+                border-radius: 50%;
+                background: #2563eb;
+                cursor: pointer;
+                box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+              }
+              .slider::-moz-range-thumb {
+                height: 20px;
+                width: 20px;
+                border-radius: 50%;
+                background: #2563eb;
+                cursor: pointer;
+                border: none;
+                box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+              }
+            `}</style>
+          </div>
+        );
+
+      case 'emoji':
+        return (
+          <div key={question.id} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">
+              {question.question}
+            </h3>
+            <div className="flex justify-center gap-3">
+              {question.options.map((emoji, emojiIndex) => (
+                <motion.button
+                  key={emojiIndex}
+                  onClick={() => handleQuizAnswer(question.id, emoji)}
+                  className={`text-2xl p-3 rounded-2xl transition-all ${
+                    value === emoji 
+                      ? 'bg-blue-100 scale-110 shadow-md' 
+                      : 'bg-gray-50 hover:bg-gray-100'
+                  }`}
+                  whileHover={{ scale: value === emoji ? 1.1 : 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {emoji}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const getCardIcon = (type) => {
+    switch (type) {
+      case 'growth': return TrendingUp;
+      case 'compassion': return Heart;
+      case 'action': return Target;
+      default: return Lightbulb;
+    }
+  };
+
+  const getCardGradient = (type) => {
+    switch (type) {
+      case 'growth': return 'from-blue-400 to-indigo-500';
+      case 'compassion': return 'from-emerald-400 to-cyan-500';
+      case 'action': return 'from-purple-400 to-pink-500';
+      default: return 'from-gray-400 to-gray-500';
+    }
+  };
 
   const renderInputStage = () => (
     <motion.div
@@ -126,6 +374,12 @@ const PerspectiveScreen = () => {
       transition={{ duration: 0.4 }}
       className="space-y-6"
     >
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
+          <p className="text-red-700 text-sm">{error}</p>
+        </div>
+      )}
+
       {/* Input Card */}
       <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
         <div className="space-y-4">
@@ -206,132 +460,36 @@ const PerspectiveScreen = () => {
       transition={{ duration: 0.4 }}
       className="space-y-6"
     >
-      {/* Current Mood */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900">
-          How are you feeling about this right now?
-        </h3>
-        <div className="flex justify-center gap-3">
-          {feelingEmojis.map((emoji) => (
-            <motion.button
-              key={emoji}
-              onClick={() => setCurrentMood(emoji)}
-              className={`text-2xl p-3 rounded-2xl transition-all ${
-                currentMood === emoji 
-                  ? 'bg-blue-100 scale-110 shadow-md' 
-                  : 'bg-gray-50 hover:bg-gray-100'
-              }`}
-              whileHover={{ scale: currentMood === emoji ? 1.1 : 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {emoji}
-            </motion.button>
-          ))}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
+          <p className="text-red-700 text-sm">{error}</p>
         </div>
-      </div>
+      )}
 
-      {/* Frequency Assessment */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900">
-          How often do you experience this?
-        </h3>
-        <div className="grid grid-cols-2 gap-3">
-          {panicOptions.map((option) => (
-            <motion.button
-              key={option.key}
-              onClick={() => setPanicFrequency(option.key)}
-              className={`text-sm p-3 rounded-xl transition-colors border ${
-                panicFrequency === option.key
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-              }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {option.label}
-            </motion.button>
-          ))}
-        </div>
-      </div>
-
-      {/* Situation Context */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900">
-          What area of life does this relate to?
-        </h3>
-        <div className="grid grid-cols-2 gap-3">
-          {contextOptions.map((option) => (
-            <motion.button
-              key={option.key}
-              onClick={() => setSituationContext(option.key)}
-              className={`text-sm p-3 rounded-xl transition-colors border ${
-                situationContext === option.key
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-              }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {option.label}
-            </motion.button>
-          ))}
-        </div>
-      </div>
-
-      {/* Intensity Level */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900">
-          How intense are these feelings? ({anxietyLevel}/5)
-        </h3>
-        <div className="space-y-4">
-          <input
-            type="range"
-            min={1}
-            max={5}
-            value={anxietyLevel}
-            onChange={(e) => setAnxietyLevel(parseInt(e.target.value))}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-          />
-          <div className="flex justify-between text-xs text-gray-500">
-            <span>Very mild</span>
-            <span>Moderate</span>
-            <span>Very intense</span>
-          </div>
-        </div>
-        <style jsx>{`
-          .slider::-webkit-slider-thumb {
-            appearance: none;
-            height: 20px;
-            width: 20px;
-            border-radius: 50%;
-            background: #2563eb;
-            cursor: pointer;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
-          }
-          .slider::-moz-range-thumb {
-            height: 20px;
-            width: 20px;
-            border-radius: 50%;
-            background: #2563eb;
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
-          }
-        `}</style>
-      </div>
+      {/* Quiz Questions */}
+      {quizQuestions.map((question, index) => (
+        <motion.div
+          key={question.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.1 }}
+        >
+          {renderQuizQuestion(question, index)}
+        </motion.div>
+      ))}
 
       {/* Continue Button */}
       <div className="sticky bottom-6">
         <motion.button
           onClick={handleCompleteUnderstanding}
-          disabled={!isUnderstandingFormValid || isLoading}
+          disabled={!isUnderstandingFormValid() || isLoading}
           className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all flex items-center justify-center space-x-2 ${
-            isUnderstandingFormValid && !isLoading
+            isUnderstandingFormValid() && !isLoading
               ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}
-          whileHover={isUnderstandingFormValid && !isLoading ? { scale: 1.02 } : {}}
-          whileTap={isUnderstandingFormValid && !isLoading ? { scale: 0.98 } : {}}
+          whileHover={isUnderstandingFormValid() && !isLoading ? { scale: 1.02 } : {}}
+          whileTap={isUnderstandingFormValid() && !isLoading ? { scale: 0.98 } : {}}
         >
           {isLoading ? (
             <motion.div
@@ -341,7 +499,7 @@ const PerspectiveScreen = () => {
             />
           ) : (
             <>
-              <span>{isUnderstandingFormValid ? 'Get New Perspective →' : 'Please complete all fields'}</span>
+              <span>{isUnderstandingFormValid() ? 'Get New Perspective →' : 'Please complete all questions'}</span>
             </>
           )}
         </motion.button>
@@ -358,6 +516,12 @@ const PerspectiveScreen = () => {
       transition={{ duration: 0.4 }}
       className="space-y-6"
     >
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
+          <p className="text-red-700 text-sm">{error}</p>
+        </div>
+      )}
+
       {/* Success Header */}
       <motion.div
         className="bg-gradient-to-br from-emerald-50 to-cyan-100 rounded-2xl p-6 border border-emerald-200 text-center"
@@ -366,64 +530,76 @@ const PerspectiveScreen = () => {
         transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
       >
         <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Lightbulb className="w-8 h-8 text-white" />
+          <Sparkles className="w-8 h-8 text-white" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
           Here are your personalized perspectives
         </h3>
-        <p className="text-gray-600 text-sm">
+        <p className="text-gray-600 text-sm mb-3">
           Based on what you shared, here are some fresh ways to approach your situation
         </p>
+        {pointsEarned > 0 && (
+          <div className="bg-white rounded-lg px-3 py-2 inline-block">
+            <span className="text-emerald-600 font-semibold text-sm">
+              🎉 +{pointsEarned} points earned!
+            </span>
+          </div>
+        )}
       </motion.div>
 
       {/* Perspective Cards */}
       <div className="space-y-4">
-        {perspectiveCards.map((card, index) => (
-          <motion.div
-            key={index}
-            className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 + index * 0.1 }}
-          >
-            <div 
-              className="cursor-pointer"
-              onClick={() => handleCardFlip(index)}
+        {perspectiveCards.map((card, index) => {
+          const IconComponent = getCardIcon(card.type);
+          const gradientClass = getCardGradient(card.type);
+          
+          return (
+            <motion.div
+              key={index}
+              className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 + index * 0.1 }}
             >
-              <div className={`h-24 bg-gradient-to-r ${card.color} flex items-center justify-center relative`}>
-                <div className="text-center">
-                  <card.icon className="w-8 h-8 text-white mx-auto mb-2" />
-                  <h3 className="text-white font-semibold">{card.title}</h3>
+              <div 
+                className="cursor-pointer"
+                onClick={() => handleCardFlip(index)}
+              >
+                <div className={`h-24 bg-gradient-to-r ${gradientClass} flex items-center justify-center relative`}>
+                  <div className="text-center">
+                    <IconComponent className="w-8 h-8 text-white mx-auto mb-2" />
+                    <h3 className="text-white font-semibold">{card.title}</h3>
+                  </div>
+                  <div className="absolute top-2 right-2">
+                    <motion.div
+                      animate={{ rotate: flippedCards.has(index) ? 180 : 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center"
+                    >
+                      <RotateCcw className="w-3 h-3 text-white" />
+                    </motion.div>
+                  </div>
                 </div>
-                <div className="absolute top-2 right-2">
-                  <motion.div
-                    animate={{ rotate: flippedCards.has(index) ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center"
-                  >
-                    <RotateCcw className="w-3 h-3 text-white" />
-                  </motion.div>
-                </div>
+                
+                <AnimatePresence>
+                  {flippedCards.has(index) && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="p-6 border-t border-gray-100"
+                    >
+                      <p className="text-gray-700 text-sm leading-relaxed">
+                        {card.content}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-              
-              <AnimatePresence>
-                {flippedCards.has(index) && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="p-6 border-t border-gray-100"
-                  >
-                    <p className="text-gray-700 text-sm leading-relaxed">
-                      {card.content}
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Action Buttons */}
@@ -439,6 +615,7 @@ const PerspectiveScreen = () => {
         </motion.button>
         
         <motion.button
+          onClick={handleSaveToJournal}
           className="flex items-center justify-center space-x-2 p-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
