@@ -2,11 +2,23 @@
   "name": "drishti-app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
+    "vercel-build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:reset": "prisma migrate reset",
+    "db:seed": "node scripts/seed.js",
+    "db:studio": "prisma studio",
+    "db:validate": "node scripts/validate-db.js",
+    "db:switch:sqlite": "node scripts/switch-db.js sqlite && npm run db:generate",
+    "db:switch:postgresql": "node scripts/switch-db.js postgresql && npm run db:generate"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -17,11 +29,14 @@
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.542.0",
     "next": "15.5.2",
+    "pg": "^8.12.0",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "prisma": "^6.15.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/pg": "^8.11.10",
     "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",

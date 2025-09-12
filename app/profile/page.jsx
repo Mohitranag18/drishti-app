@@ -550,7 +550,7 @@ const ProfileScreen = () => {
               transition={{ delay: 0.8 }}
             >
               <div className="text-gray-500 text-sm">
-                <p className="mb-1">Drishti App v2.1.0</p>
+                <p className="mb-1">Drishti App v1.0.0</p>
                 <p>Made with care for your wellbeing</p>
               </div>
             </motion.div>
