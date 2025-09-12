@@ -2,6 +2,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
 import { authenticateUser } from '../../../lib/auth';
+import { generateManualJournalContent } from '../../../lib/aiService';
+import notificationService from '../../../lib/notificationService';
 
 export async function GET(request) {
   try {
@@ -95,12 +97,12 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { title, content, mood_emoji, tags } = body;
+    const { title, content } = body;
 
     // Validation
-    if (!title || !content || !mood_emoji) {
+    if (!title || !content) {
       return NextResponse.json(
-        { error: 'Title, content, and mood are required' },
+        { error: 'Title and content are required' },
         { status: 400 }
       );
     }
@@ -119,8 +121,8 @@ export async function POST(request) {
       );
     }
 
-    // Generate summary (first 100 characters of content)
-    const summary = content.length > 100 ? content.substring(0, 100) + '...' : content;
+    // Generate AI-powered content
+    const aiGeneratedContent = await generateManualJournalContent(title, content);
 
     // Calculate points based on content length
     const pointsEarned = Math.min(Math.floor(content.length / 10), 50);
@@ -131,10 +133,10 @@ export async function POST(request) {
         user_id: user.id,
         title: title.trim(),
         content: content.trim(),
-        mood_emoji,
-        summary,
+        mood_emoji: aiGeneratedContent.mood_emoji,
+        summary: aiGeneratedContent.summary,
         points_earned: pointsEarned,
-        tags: tags && tags.length > 0 ? JSON.stringify(tags) : null,
+        tags: JSON.stringify(aiGeneratedContent.tags),
         date: new Date()
       }
     });
@@ -147,10 +149,18 @@ export async function POST(request) {
       }
     });
 
+    // Generate notifications based on milestones
+    try {
+      await notificationService.checkMilestones(user.id);
+    } catch (notificationError) {
+      console.error('Error generating notifications:', notificationError);
+      // Don't fail the main request if notifications fail
+    }
+
     // Format response
     const formattedJournal = {
       ...journal,
-      tags: journal.tags ? JSON.parse(journal.tags) : [],
+      tags: aiGeneratedContent.tags,
       date: journal.date.toISOString().split('T')[0]
     };
 

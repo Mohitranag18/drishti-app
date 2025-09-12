@@ -22,17 +22,22 @@ import {
   Loader2
 } from 'lucide-react';
 import ProtectedRoute from '../components/ProtectedRoute';
-import { useApp } from '../context/AppContext';
+// import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 
 const ProfileScreen = () => {
-  const { setCurrentView } = useApp();
+  // const { setCurrentView } = useApp();
   const { user, logout, updateUser } = useAuth();
   
   // Profile states
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [userStats, setUserStats] = useState({
+    completedSessions: 0,
+    currentStreak: 0,
+    totalPoints: 0
+  });
   
   // User preferences states (synced with user data)
   const [preferences, setPreferences] = useState({
@@ -49,6 +54,26 @@ const ProfileScreen = () => {
     username: user?.username || '',
     email: user?.email || ''
   });
+
+  // Fetch user stats
+  const fetchUserStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/user/stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserStats(data.stats);
+      }
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+    }
+  };
 
   // Update preferences when user data changes
   useEffect(() => {
@@ -68,17 +93,26 @@ const ProfileScreen = () => {
     }
   }, [user]);
 
+  // Fetch stats when component mounts
+  useEffect(() => {
+    fetchUserStats();
+  }, []);
+
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.4 }
   };
 
-  // Update user preferences
+  // Update user preferences with debouncing
   const updatePreference = async (key, value) => {
+    // Optimistically update the UI immediately
+    setPreferences(prev => ({
+      ...prev,
+      [key]: value
+    }));
+
     try {
-      setIsUpdating(true);
-      
       const response = await fetch('/api/user/preferences', {
         method: 'PATCH',
         headers: {
@@ -93,10 +127,6 @@ const ProfileScreen = () => {
       if (response.ok) {
         const updatedUser = await response.json();
         updateUser(updatedUser.user);
-        setPreferences(prev => ({
-          ...prev,
-          [key]: value
-        }));
       } else {
         console.error('Failed to update preference');
         // Revert the change if it failed
@@ -112,8 +142,6 @@ const ProfileScreen = () => {
         ...prev,
         [key]: !value
       }));
-    } finally {
-      setIsUpdating(false);
     }
   };
 
@@ -166,7 +194,6 @@ const ProfileScreen = () => {
           <Icon className="w-5 h-5 text-blue-600" />
         </div>
         <span className="text-gray-900 font-medium">{label}</span>
-        {disabled && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
       </div>
       <motion.button
         onClick={onToggle}
@@ -390,19 +417,19 @@ const ProfileScreen = () => {
                 <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-gray-900">
-                      {user.sessions}
+                      {userStats.completedSessions}
                     </div>
                     <div className="text-xs text-gray-500">Sessions</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-gray-900">
-                      {user.current_streak}
+                      {userStats.currentStreak}
                     </div>
                     <div className="text-xs text-gray-500">Day Streak</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-gray-900">
-                      {user.total_points}
+                      {userStats.totalPoints}
                     </div>
                     <div className="text-xs text-gray-500">Points</div>
                   </div>
@@ -456,7 +483,6 @@ const ProfileScreen = () => {
                   onToggle={() => updatePreference('push_notification', !preferences.push_notification)}
                   label="Push Notifications"
                   icon={Bell}
-                  disabled={isUpdating}
                 />
                 
                 <SwitchToggle
@@ -464,7 +490,6 @@ const ProfileScreen = () => {
                   onToggle={() => updatePreference('dark_mode', !preferences.dark_mode)}
                   label="Dark Mode"
                   icon={preferences.dark_mode ? Moon : Sun}
-                  disabled={isUpdating}
                 />
                 
                 <SwitchToggle
@@ -472,7 +497,6 @@ const ProfileScreen = () => {
                   onToggle={() => updatePreference('wellness_reminders', !preferences.wellness_reminders)}
                   label="Wellness Reminders"
                   icon={Target}
-                  disabled={isUpdating}
                 />
                 
                 <SwitchToggle
@@ -480,7 +504,6 @@ const ProfileScreen = () => {
                   onToggle={() => updatePreference('weekly_summary', !preferences.weekly_summary)}
                   label="Weekly Summary"
                   icon={Calendar}
-                  disabled={isUpdating}
                 />
               </div>
             </motion.section>

@@ -22,17 +22,18 @@ import {
   RefreshCw
 } from 'lucide-react';
 import ProtectedRoute from '../components/ProtectedRoute';
-import { useApp } from '../context/AppContext';
+import JournalDetailModal from '../components/JournalDetailModal';
+// import { useApp } from '../context/AppContext';
 
 const JournalScreen = () => {
-  const { setCurrentView } = useApp();
+  // const { setCurrentView } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMood, setSelectedMood] = useState('all');
   const [showNewEntry, setShowNewEntry] = useState(false);
   const [newEntryContent, setNewEntryContent] = useState('');
   const [newEntryTitle, setNewEntryTitle] = useState('');
-  const [newEntryMood, setNewEntryMood] = useState('');
-  const [newEntryTags, setNewEntryTags] = useState('');
+  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   
   // Data states
   const [journalEntries, setJournalEntries] = useState([]);
@@ -158,7 +159,7 @@ const JournalScreen = () => {
   }, [searchQuery, selectedMood]);
 
   const handleNewEntry = async () => {
-    if (!newEntryContent.trim() || !newEntryMood || !newEntryTitle.trim()) {
+    if (!newEntryContent.trim() || !newEntryTitle.trim()) {
       setError('Please fill in all required fields');
       return;
     }
@@ -168,7 +169,6 @@ const JournalScreen = () => {
 
     try {
       const token = getAuthToken();
-      const tags = newEntryTags.split(',').map(tag => tag.trim()).filter(tag => tag);
 
       const response = await fetch('/api/journal', {
         method: 'POST',
@@ -178,9 +178,7 @@ const JournalScreen = () => {
         },
         body: JSON.stringify({
           title: newEntryTitle.trim(),
-          content: newEntryContent.trim(),
-          mood_emoji: newEntryMood,
-          tags: tags
+          content: newEntryContent.trim()
         })
       });
 
@@ -202,11 +200,9 @@ const JournalScreen = () => {
       // Reset form
       setNewEntryContent('');
       setNewEntryTitle('');
-      setNewEntryMood('');
-      setNewEntryTags('');
       setShowNewEntry(false);
 
-      // Show success message (you could use a toast library here)
+      // Show success message
       alert(`Journal entry created! You earned ${data.pointsEarned} points.`);
 
     } catch (err) {
@@ -237,14 +233,23 @@ const JournalScreen = () => {
         throw new Error(errorData.error || 'Failed to delete entry');
       }
 
-      // Remove from list
+      // Remove from list immediately for better UX
       setJournalEntries(prev => prev.filter(entry => entry.id !== id));
       
       // Update stats
       setStats(prev => ({
         ...prev,
-        totalEntries: prev.totalEntries - 1
+        totalEntries: Math.max(0, prev.totalEntries - 1)
       }));
+
+      // Close detail modal if the deleted entry is currently open
+      if (selectedEntry && selectedEntry.id === id) {
+        setShowDetailModal(false);
+        setSelectedEntry(null);
+      }
+
+      // Show success message
+      alert('Journal entry deleted successfully');
 
     } catch (err) {
       setError(err.message);
@@ -288,6 +293,11 @@ const JournalScreen = () => {
     setLoading(true);
     fetchJournals(1, true);
     fetchStats();
+  };
+
+  const handleReadMore = (entry) => {
+    setSelectedEntry(entry);
+    setShowDetailModal(true);
   };
 
   return (
@@ -506,10 +516,7 @@ const JournalScreen = () => {
                         className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => {
-                          // You can implement a detailed view modal here
-                          alert(`Full content:\n\n${entry.content}`);
-                        }}
+                        onClick={() => handleReadMore(entry)}
                       >
                         <span>Read more</span>
                         <ChevronRight className="w-3 h-3" />
@@ -638,30 +645,6 @@ const JournalScreen = () => {
                       {newEntryTitle.length}/200 characters
                     </div>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      How are you feeling? *
-                    </label>
-                    <div className="flex flex-wrap gap-3">
-                      {Object.entries(moodEmojis).map(([key, data]) => (
-                        <motion.button
-                          key={key}
-                          onClick={() => setNewEntryMood(key)}
-                          className={`p-3 rounded-xl transition-all border ${
-                            newEntryMood === key 
-                              ? `${data.bg} ring-2 ring-blue-500 border-blue-300` 
-                              : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
-                          }`}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          title={data.label}
-                        >
-                          <span className="text-xl">{data.emoji}</span>
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -680,19 +663,15 @@ const JournalScreen = () => {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tags (optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={newEntryTags}
-                      onChange={(e) => setNewEntryTags(e.target.value)}
-                      placeholder="gratitude, work, family (comma separated)"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                    <div className="mt-1 text-xs text-gray-400">
-                      Separate tags with commas
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="flex items-start space-x-2">
+                      <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-blue-600 text-xs">ℹ</span>
+                      </div>
+                      <div className="text-sm text-blue-700">
+                        <p className="font-medium mb-1">AI-Powered Enhancement</p>
+                        <p className="text-xs">We'll automatically generate a mood emoji, summary, and tags based on your content to help you better organize and understand your thoughts.</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -708,14 +687,14 @@ const JournalScreen = () => {
                   </motion.button>
                   <motion.button
                     onClick={handleNewEntry}
-                    disabled={!newEntryContent.trim() || !newEntryMood || !newEntryTitle.trim() || submitting}
+                    disabled={!newEntryContent.trim() || !newEntryTitle.trim() || submitting}
                     className={`flex-1 px-4 py-3 rounded-xl font-medium transition-colors flex items-center justify-center space-x-2 ${
-                      newEntryContent.trim() && newEntryMood && newEntryTitle.trim() && !submitting
+                      newEntryContent.trim() && newEntryTitle.trim() && !submitting
                         ? 'bg-blue-600 text-white hover:bg-blue-700'
                         : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     }`}
-                    whileHover={newEntryContent.trim() && newEntryMood && newEntryTitle.trim() && !submitting ? { scale: 1.02 } : {}}
-                    whileTap={newEntryContent.trim() && newEntryMood && newEntryTitle.trim() && !submitting ? { scale: 0.98 } : {}}
+                    whileHover={newEntryContent.trim() && newEntryTitle.trim() && !submitting ? { scale: 1.02 } : {}}
+                    whileTap={newEntryContent.trim() && newEntryTitle.trim() && !submitting ? { scale: 0.98 } : {}}
                   >
                     {submitting ? (
                       <>
@@ -735,6 +714,13 @@ const JournalScreen = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Journal Detail Modal */}
+        <JournalDetailModal
+          entry={selectedEntry}
+          isOpen={showDetailModal}
+          onClose={() => setShowDetailModal(false)}
+        />
       </div>
     </ProtectedRoute>
   );

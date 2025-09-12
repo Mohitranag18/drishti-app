@@ -11,6 +11,7 @@ import PerspectiveScreen from './perspective/page.jsx';
 import ProfileScreen from './profile/page.jsx';
 import NotificationsScreen from './notification/page.jsx';
 import JournalScreen from './journal/page.jsx';
+import HistoryScreen from './history/page.jsx';
 
 const AppContent = () => {
   const { state } = useApp();
@@ -27,6 +28,8 @@ const AppContent = () => {
         return <ProfileScreen />
       case 'journal':
         return <JournalScreen />
+      case 'history':
+        return <HistoryScreen />
       default:
         return <HomeScreen />;
     }

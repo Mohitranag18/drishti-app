@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request) {
   try {
-    const { user, error } = await authenticateUser(request);
+    const { error } = await authenticateUser(request);
     
     if (error) {
       return NextResponse.json({ error }, { status: 401 });

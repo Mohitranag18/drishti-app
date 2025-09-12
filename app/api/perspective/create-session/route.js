@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
 import { authenticateUser } from '../../../../lib/auth';
+import notificationService from '../../../../lib/notificationService';
 
 export async function POST(request) {
   try {
@@ -31,6 +32,14 @@ export async function POST(request) {
         status: 'input'
       }
     });
+
+    // Generate notifications based on milestones
+    try {
+      await notificationService.checkMilestones(user.id);
+    } catch (notificationError) {
+      console.error('Error generating notifications:', notificationError);
+      // Don't fail the main request if notifications fail
+    }
 
     return NextResponse.json({
       success: true,

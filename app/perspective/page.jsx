@@ -4,10 +4,10 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Send, RotateCcw, Lightbulb, Heart, Target, TrendingUp, Sparkles } from 'lucide-react';
 import ProtectedRoute from '../components/ProtectedRoute';
-import { useApp } from '../context/AppContext';
+// import { useApp } from '../context/AppContext';
 
 const PerspectiveScreen = () => {
-  const { setCurrentView } = useApp();
+  // const { setCurrentView } = useApp();
   const [currentStage, setCurrentStage] = useState('input'); // 'input', 'understanding', 'solution'
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);

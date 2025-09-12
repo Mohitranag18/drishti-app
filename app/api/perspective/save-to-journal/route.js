@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
 import { authenticateUser } from '../../../../lib/auth';
+import { generatePerspectiveJournalContent } from '../../../../lib/aiService';
 
 export async function POST(request) {
   try {
@@ -18,14 +19,15 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Session ID is required' }, { status: 400 });
     }
 
-    // Get session with cards
+    // Get session with cards and quizzes
     const session = await prisma.perspectiveSession.findFirst({
       where: {
         id: sessionId,
         user_id: user.id
       },
       include: {
-        cards: true
+        cards: true,
+        quizzes: true
       }
     });
 
@@ -33,56 +35,71 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
+    // Check if already saved to journal
     if (session.saved_to_journal) {
-      return NextResponse.json({ error: 'Session already saved to journal' }, { status: 400 });
+      return NextResponse.json({ 
+        error: 'This perspective session has already been saved to your journal',
+        alreadySaved: true 
+      }, { status: 400 });
     }
 
-    // Create journal entry
-    const cardsContent = session.cards.map(card =>
-      `**${card.title}**\n${card.content}`
-    ).join('\n\n');
+    // Generate AI-powered journal content
+    const sessionData = {
+      userInput: session.user_input,
+      quizzes: session.quizzes,
+      cards: session.cards
+    };
 
-    const journalContent = `**Original Situation:**\n${session.user_input}\n\n**Perspective Insights:**\n\n${cardsContent}`;
-    const journalTitle = `Perspective Session - ${new Date().toLocaleDateString()}`;
-    const journalSummary = `Gained new perspectives on challenges through guided reflection and insights.`;
+    const aiGeneratedContent = await generatePerspectiveJournalContent(sessionData);
 
     // Calculate points based on content length and session completion
     const basePoints = 25; // Base points for saving to journal
-    const contentBonus = Math.min(Math.floor(journalContent.length / 20), 25);
+    const contentBonus = Math.min(Math.floor(aiGeneratedContent.content.length / 20), 25);
     const totalPoints = basePoints + contentBonus;
 
-    const journal = await prisma.journal.create({
-      data: {
-        user_id: user.id,
-        date: session.date,
-        mood_emoji: '🧠', // Brain emoji for perspective sessions
-        title: journalTitle,
-        content: journalContent,
-        summary: journalSummary,
-        points_earned: totalPoints,
-        tags: JSON.stringify(['perspective', 'growth', 'mindset', 'reflection'])
-      }
-    });
+    // Use transaction to ensure both operations succeed or fail together
+    const result = await prisma.$transaction(async (tx) => {
+      // Create journal entry
+      const journal = await tx.journal.create({
+        data: {
+          user_id: user.id,
+          date: session.date,
+          mood_emoji: aiGeneratedContent.mood_emoji,
+          title: aiGeneratedContent.title,
+          content: aiGeneratedContent.content,
+          summary: aiGeneratedContent.summary,
+          points_earned: totalPoints,
+          tags: JSON.stringify(aiGeneratedContent.tags)
+        }
+      });
 
-    // Update session to mark as saved
-    await prisma.perspectiveSession.update({
-      where: { id: sessionId },
-      data: { saved_to_journal: true }
-    });
+      // Update session to mark as saved
+      await tx.perspectiveSession.update({
+        where: { id: sessionId },
+        data: { saved_to_journal: true }
+      });
 
-    // Award additional points
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        total_points: { increment: totalPoints }
-      }
+      // Award additional points
+      await tx.user.update({
+        where: { id: user.id },
+        data: {
+          total_points: { increment: totalPoints }
+        }
+      });
+
+      return journal;
     });
 
     return NextResponse.json({
       success: true,
-      journalId: journal.id,
+      journalId: result.id,
       pointsEarned: totalPoints,
-      message: 'Perspective session saved to journal successfully'
+      message: 'Perspective session saved to journal successfully',
+      journal: {
+        ...result,
+        tags: aiGeneratedContent.tags,
+        date: result.date.toISOString().split('T')[0]
+      }
     });
 
   } catch (error) {
