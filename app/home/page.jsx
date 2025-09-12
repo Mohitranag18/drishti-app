@@ -21,6 +21,9 @@ import { useAuth } from '../context/AuthContext';
 import MoodTrendChart from '../components/MoodTrendChart';
 import EnhancedMoodSelector from '../components/EnhancedMoodSelector';
 
+// Force dynamic rendering to prevent static generation issues
+export const dynamic = 'force-dynamic';
+
 const HomeScreen = () => {
   const { setCurrentView } = useApp();
   const { user } = useAuth();
@@ -348,4 +351,26 @@ const HomeScreen = () => {
   );
 };
 
-export default HomeScreen;
+// Wrapper component to handle context availability
+const HomePageWrapper = () => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <HomeScreen />;
+};
+
+export default HomePageWrapper;
