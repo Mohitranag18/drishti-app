@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../../../lib/prisma';
 import { authenticateUser } from '../../../lib/auth';
-
-const prisma = new PrismaClient();
 
 // GET /api/notifications - Get all notifications for the current user
 export async function GET(request) {
@@ -22,26 +20,53 @@ export async function GET(request) {
       ...(unreadOnly && { is_read: false })
     };
 
-    const [notifications, totalCount] = await Promise.all([
-      prisma.notification.findMany({
-        where: whereClause,
-        orderBy: { created_at: 'desc' },
-        take: limit,
-        skip: offset,
-      }),
-      prisma.notification.count({
-        where: whereClause,
-      })
-    ]);
+    // Add retry logic for database operations
+    let retries = 3;
+    let notifications, totalCount;
+    
+    while (retries > 0) {
+      try {
+        [notifications, totalCount] = await Promise.all([
+          prisma.notification.findMany({
+            where: whereClause,
+            orderBy: { created_at: 'desc' },
+            take: limit,
+            skip: offset,
+          }),
+          prisma.notification.count({
+            where: whereClause,
+          })
+        ]);
+        break; // Success, exit retry loop
+      } catch (dbError) {
+        retries--;
+        if (retries === 0) {
+          throw dbError;
+        }
+        console.log(`Database query failed, retrying... (${retries} retries left)`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
 
     return NextResponse.json({
-      notifications,
-      totalCount,
-      hasMore: offset + limit < totalCount
+      notifications: notifications || [],
+      totalCount: totalCount || 0,
+      hasMore: offset + limit < (totalCount || 0)
     });
 
   } catch (error) {
     console.error('Error fetching notifications:', error);
+    
+    // Return empty array instead of error for better UX
+    if (error.message?.includes('Can\'t reach database server')) {
+      return NextResponse.json({
+        notifications: [],
+        totalCount: 0,
+        hasMore: false,
+        error: 'Database temporarily unavailable'
+      });
+    }
+    
     return NextResponse.json(
       { error: 'Failed to fetch notifications' },
       { status: 500 }

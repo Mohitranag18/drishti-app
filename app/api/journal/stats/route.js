@@ -19,59 +19,74 @@ export async function GET(request) {
 
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Get various stats
-    const [
-      totalEntries,
-      favoriteEntries,
-      weeklyEntries,
-      monthlyEntries,
-      recentEntries
-    ] = await Promise.all([
-      // Total entries
-      prisma.journal.count({
-        where: { user_id: user.id }
-      }),
-      
-      // Favorite entries (entries with high points or specific tags)
-      prisma.journal.count({
-        where: {
-          user_id: user.id,
-          points_earned: { gte: 30 }
+    // Add retry logic for database operations
+    let retries = 3;
+    let totalEntries, favoriteEntries, weeklyEntries, monthlyEntries, recentEntries;
+    
+    while (retries > 0) {
+      try {
+        [
+          totalEntries,
+          favoriteEntries,
+          weeklyEntries,
+          monthlyEntries,
+          recentEntries
+        ] = await Promise.all([
+          // Total entries
+          prisma.journal.count({
+            where: { user_id: user.id }
+          }),
+          
+          // Favorite entries (entries with high points or specific tags)
+          prisma.journal.count({
+            where: {
+              user_id: user.id,
+              points_earned: { gte: 30 }
+            }
+          }),
+          
+          // Weekly entries
+          prisma.journal.count({
+            where: {
+              user_id: user.id,
+              created_at: { gte: startOfWeek }
+            }
+          }),
+          
+          // Monthly entries
+          prisma.journal.count({
+            where: {
+              user_id: user.id,
+              created_at: { gte: startOfMonth }
+            }
+          }),
+          
+          // Recent entries for streak calculation
+          prisma.journal.findMany({
+            where: { user_id: user.id },
+            orderBy: { created_at: 'desc' },
+            take: 30,
+            select: {
+              created_at: true,
+              date: true
+            }
+          })
+        ]);
+        break; // Success, exit retry loop
+      } catch (dbError) {
+        retries--;
+        if (retries === 0) {
+          throw dbError;
         }
-      }),
-      
-      // Weekly entries
-      prisma.journal.count({
-        where: {
-          user_id: user.id,
-          created_at: { gte: startOfWeek }
-        }
-      }),
-      
-      // Monthly entries
-      prisma.journal.count({
-        where: {
-          user_id: user.id,
-          created_at: { gte: startOfMonth }
-        }
-      }),
-      
-      // Recent entries for streak calculation
-      prisma.journal.findMany({
-        where: { user_id: user.id },
-        orderBy: { created_at: 'desc' },
-        take: 30,
-        select: {
-          created_at: true,
-          date: true
-        }
-      })
-    ]);
+        console.log(`Database query failed, retrying... (${retries} retries left)`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
 
     // Calculate current streak
     let currentStreak = 0;
     const today = new Date().toISOString().split('T')[0];
-    const uniqueDates = [...new Set(recentEntries.map(entry => 
+    const uniqueDates = [...new Set((recentEntries || []).map(entry => 
       entry.date.toISOString().split('T')[0]
     ))].sort().reverse();
 
@@ -116,20 +131,38 @@ export async function GET(request) {
     }
 
     return NextResponse.json({
-      totalEntries,
-      favoriteEntries,
-      weeklyEntries,
-      monthlyEntries,
+      totalEntries: totalEntries || 0,
+      favoriteEntries: favoriteEntries || 0,
+      weeklyEntries: weeklyEntries || 0,
+      monthlyEntries: monthlyEntries || 0,
       currentStreak,
       stats: {
-        thisWeek: weeklyEntries,
-        thisMonth: monthlyEntries,
-        allTime: totalEntries
+        thisWeek: weeklyEntries || 0,
+        thisMonth: monthlyEntries || 0,
+        allTime: totalEntries || 0
       }
     });
 
   } catch (error) {
     console.error('Error fetching journal stats:', error);
+    
+    // Return default values instead of error for better UX
+    if (error.message?.includes('Can\'t reach database server')) {
+      return NextResponse.json({
+        totalEntries: 0,
+        favoriteEntries: 0,
+        weeklyEntries: 0,
+        monthlyEntries: 0,
+        currentStreak: 0,
+        stats: {
+          thisWeek: 0,
+          thisMonth: 0,
+          allTime: 0
+        },
+        error: 'Database temporarily unavailable'
+      });
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

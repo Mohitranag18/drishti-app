@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../../../../lib/prisma';
 import { authenticateUser } from '../../../../lib/auth';
-
-const prisma = new PrismaClient();
 
 // PUT /api/notifications/bulk - Bulk operations on notifications
 export async function PUT(request) {
@@ -13,7 +11,7 @@ export async function PUT(request) {
     }
 
     const body = await request.json();
-    const { action, notification_ids } = body;
+    const { action } = body;
 
     if (!action) {
       return NextResponse.json(
@@ -22,48 +20,75 @@ export async function PUT(request) {
       );
     }
 
-    const whereClause = {
-      user_id: user.id,
-      ...(notification_ids && { id: { in: notification_ids } })
-    };
-
+    // Add retry logic for database operations
+    let retries = 3;
     let result;
-
-    switch (action) {
-      case 'mark_all_read':
-        result = await prisma.notification.updateMany({
-          where: whereClause,
-          data: { is_read: true }
-        });
-        break;
-
-      case 'mark_all_unread':
-        result = await prisma.notification.updateMany({
-          where: whereClause,
-          data: { is_read: false }
-        });
-        break;
-
-      case 'delete_all':
-        result = await prisma.notification.deleteMany({
-          where: whereClause
-        });
-        break;
-
-      default:
-        return NextResponse.json(
-          { error: 'Invalid action' },
-          { status: 400 }
-        );
+    
+    while (retries > 0) {
+      try {
+        switch (action) {
+          case 'mark_all_read':
+            result = await prisma.notification.updateMany({
+              where: {
+                user_id: user.id,
+                is_read: false
+              },
+              data: {
+                is_read: true
+              }
+            });
+            break;
+            
+          case 'delete_all_read':
+            result = await prisma.notification.deleteMany({
+              where: {
+                user_id: user.id,
+                is_read: true
+              }
+            });
+            break;
+            
+          case 'delete_all':
+            result = await prisma.notification.deleteMany({
+              where: {
+                user_id: user.id
+              }
+            });
+            break;
+            
+          default:
+            return NextResponse.json(
+              { error: 'Invalid action' },
+              { status: 400 }
+            );
+        }
+        break; // Success, exit retry loop
+      } catch (dbError) {
+        retries--;
+        if (retries === 0) {
+          throw dbError;
+        }
+        console.log(`Database query failed, retrying... (${retries} retries left)`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
 
     return NextResponse.json({
-      message: `Successfully ${action.replace('_', ' ')}d notifications`,
-      count: result.count
+      success: true,
+      message: `Successfully ${action.replace('_', ' ')}`,
+      count: result?.count || 0
     });
 
   } catch (error) {
-    console.error('Error performing bulk operation:', error);
+    console.error('Error performing bulk notification operation:', error);
+    
+    if (error.message?.includes('Can\'t reach database server')) {
+      return NextResponse.json(
+        { error: 'Database temporarily unavailable' },
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Failed to perform bulk operation' },
       { status: 500 }
