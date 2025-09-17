@@ -1,11 +1,12 @@
-// prisma/schema.sqlite.prisma - SQLite schema for development
+// prisma/schema.postgresql.prisma - PostgreSQL schema for production
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
