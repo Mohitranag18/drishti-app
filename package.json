@@ -16,9 +16,7 @@
     "db:reset": "prisma migrate reset",
     "db:seed": "node scripts/seed.js",
     "db:studio": "prisma studio",
-    "db:validate": "node scripts/validate-db.js",
-    "db:switch:sqlite": "node scripts/switch-db.js sqlite && npm run db:generate",
-    "db:switch:postgresql": "node scripts/switch-db.js postgresql && npm run db:generate"
+    "db:validate": "node scripts/validate-db.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
