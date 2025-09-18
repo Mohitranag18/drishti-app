@@ -19,8 +19,8 @@
     "db:validate": "node scripts/validate-db.js"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
-    "@prisma/client": "^6.15.0",
+    "@google/genai": "^1.20.0",
+    "@prisma/client": "^6.16.2",
     "@tailwindcss/line-clamp": "^0.4.4",
     "bcryptjs": "^3.0.2",
     "framer-motion": "^12.23.12",
@@ -29,8 +29,7 @@
     "next": "15.5.2",
     "pg": "^8.12.0",
     "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "prisma": "^6.15.0"
+    "react-dom": "19.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -39,7 +38,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
     "postcss": "^8.5.6",
-    "prisma": "^6.15.0",
+    "prisma": "^6.16.2",
     "tailwindcss": "^3.4.17"
   }
 }
