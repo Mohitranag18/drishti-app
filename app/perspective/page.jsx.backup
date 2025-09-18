@@ -610,6 +610,7 @@ const PerspectiveScreen = () => {
         })}
       </div>
 
+
       {/* Action Buttons */}
       <div className="grid grid-cols-2 gap-3">
         <motion.button
@@ -638,258 +639,63 @@ const PerspectiveScreen = () => {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
-        {/* Desktop Layout */}
-        <div className="hidden lg:block">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8 pb-24">
-            <div className="grid lg:grid-cols-12 gap-8">
-              {/* Left Sidebar - Progress & Tips */}
-              <div className="lg:col-span-3">
-                <motion.div 
-                  className="pt-12 pb-6"
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
+        <div className="px-4 sm:px-6 lg:px-8 pb-24 max-w-md mx-auto">
+          
+          {/* Header */}
+          <motion.div 
+            className="pt-12 pb-6"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="flex items-center space-x-3 mb-4">
+              {currentStage !== 'input' && (
+                <motion.button
+                  onClick={() => setCurrentStage(currentStage === 'solution' ? 'understanding' : 'input')}
+                  className="p-2 hover:bg-white/50 rounded-full transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                      <Lightbulb className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h1 className="text-2xl font-bold text-gray-900">
-                        {getTitle()}
-                      </h1>
-                      <p className="text-gray-600 text-sm">
-                        {getSubtitle()}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Progress Indicator */}
-                <motion.div 
-                  className="mb-8"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Progress</h3>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Step 1: Share</span>
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                          currentStage === 'input' ? 'bg-blue-600 text-white' : 
-                          currentStage === 'understanding' || currentStage === 'solution' ? 'bg-green-600 text-white' : 'bg-gray-200'
-                        }`}>
-                          {currentStage === 'input' ? '1' : '✓'}
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Step 2: Understand</span>
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                          currentStage === 'understanding' ? 'bg-blue-600 text-white' : 
-                          currentStage === 'solution' ? 'bg-green-600 text-white' : 'bg-gray-200'
-                        }`}>
-                          {currentStage === 'understanding' ? '2' : currentStage === 'solution' ? '✓' : '2'}
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Step 3: Perspectives</span>
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                          currentStage === 'solution' ? 'bg-blue-600 text-white' : 'bg-gray-200'
-                        }`}>
-                          {currentStage === 'solution' ? '3' : '3'}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Tips Card */}
-                {currentStage === 'input' && (
-                  <motion.div
-                    className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 border border-blue-200"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                  >
-                    <h3 className="text-lg font-semibold mb-3 text-gray-900 flex items-center space-x-2">
-                      <Lightbulb className="w-5 h-5 text-blue-600" />
-                      <span>Tips for sharing</span>
-                    </h3>
-                    <div className="space-y-2 text-sm text-gray-700">
-                      <p>• Be specific about the situation and your feelings</p>
-                      <p>• Include context about when and where this happens</p>
-                      <p>• Don't worry about perfect grammar - just express yourself</p>
-                      <p>• This is a safe space to be honest about your emotions</p>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Understanding Tips */}
-                {currentStage === 'understanding' && (
-                  <motion.div
-                    className="bg-gradient-to-br from-yellow-50 to-orange-100 rounded-2xl p-6 border border-yellow-200"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                  >
-                    <h3 className="text-lg font-semibold mb-3 text-gray-900 flex items-center space-x-2">
-                      <Target className="w-5 h-5 text-yellow-600" />
-                      <span>Understanding Phase</span>
-                    </h3>
-                    <div className="space-y-2 text-sm text-gray-700">
-                      <p>• Answer honestly - there are no wrong answers</p>
-                      <p>• Take your time to reflect on each question</p>
-                      <p>• Your responses help personalize the experience</p>
-                      <p>• The more thoughtful your answers, the better the insights</p>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Solution Tips */}
-                {currentStage === 'solution' && (
-                  <motion.div
-                    className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl p-6 border border-green-200"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                  >
-                    <h3 className="text-lg font-semibold mb-3 text-gray-900 flex items-center space-x-2">
-                      <Sparkles className="w-5 h-5 text-green-600" />
-                      <span>Your Perspectives</span>
-                    </h3>
-                    <div className="space-y-2 text-sm text-gray-700">
-                      <p>• Click on cards to reveal detailed insights</p>
-                      <p>• Each perspective offers a different approach</p>
-                      <p>• Save insights to your journal for later reference</p>
-                      <p>• Try the process again with different situations</p>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-
-              {/* Main Content - Current Stage */}
-              <div className="lg:col-span-9">
-                <motion.div 
-                  className="pt-12 pb-6"
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <div className="flex items-center space-x-3 mb-4">
-                    {currentStage !== 'input' && (
-                      <motion.button
-                        onClick={() => setCurrentStage(currentStage === 'solution' ? 'understanding' : 'input')}
-                        className="p-2 hover:bg-white/50 rounded-full transition-colors"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <ArrowLeft className="w-5 h-5 text-gray-600" />
-                      </motion.button>
-                    )}
-                    <div>
-                      <h2 className="text-2xl font-semibold text-gray-900">
-                        {getTitle()}
-                      </h2>
-                      <p className="text-gray-600 text-base">
-                        {getSubtitle()}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {/* Progress Bar */}
-                  <div className="flex items-center space-x-2">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
-                      <motion.div
-                        className="bg-blue-600 h-2 rounded-full"
-                        initial={{ width: "33%" }}
-                        animate={{ 
-                          width: currentStage === 'input' ? "33%" : 
-                                 currentStage === 'understanding' ? "66%" : "100%" 
-                        }}
-                        transition={{ duration: 0.5 }}
-                      />
-                    </div>
-                    <span className="text-sm text-gray-500 font-medium">
-                      {currentStage === 'input' && 'Step 1 of 3'}
-                      {currentStage === 'understanding' && 'Step 2 of 3'}
-                      {currentStage === 'solution' && 'Complete'}
-                    </span>
-                  </div>
-                </motion.div>
-
-                {/* Stage Content */}
-                <AnimatePresence mode="wait">
-                  {currentStage === 'input' && renderInputStage()}
-                  {currentStage === 'understanding' && renderUnderstandingStage()}
-                  {currentStage === 'solution' && renderSolutionStage()}
-                </AnimatePresence>
+                  <ArrowLeft className="w-5 h-5 text-gray-600" />
+                </motion.button>
+              )}
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  {getTitle()}
+                </h1>
+                <p className="text-gray-600 text-sm">
+                  {getSubtitle()}
+                </p>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Mobile Layout - Keep existing */}
-        <div className="block lg:hidden">
-          <div className="px-4 sm:px-6 lg:px-8 pb-24 max-w-md mx-auto">
             
-            {/* Header */}
-            <motion.div 
-              className="pt-12 pb-6"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="flex items-center space-x-3 mb-4">
-                {currentStage !== 'input' && (
-                  <motion.button
-                    onClick={() => setCurrentStage(currentStage === 'solution' ? 'understanding' : 'input')}
-                    className="p-2 hover:bg-white/50 rounded-full transition-colors"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <ArrowLeft className="w-5 h-5 text-gray-600" />
-                  </motion.button>
-                )}
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                    {getTitle()}
-                  </h1>
-                  <p className="text-gray-600 text-sm">
-                    {getSubtitle()}
-                  </p>
-                </div>
+            {/* Progress Indicator */}
+            <div className="flex items-center space-x-2">
+              <div className="flex-1 bg-gray-200 rounded-full h-1.5">
+                <motion.div
+                  className="bg-blue-600 h-1.5 rounded-full"
+                  initial={{ width: "33%" }}
+                  animate={{ 
+                    width: currentStage === 'input' ? "33%" : 
+                           currentStage === 'understanding' ? "66%" : "100%" 
+                  }}
+                  transition={{ duration: 0.5 }}
+                />
               </div>
-              
-              {/* Progress Indicator */}
-              <div className="flex items-center space-x-2">
-                <div className="flex-1 bg-gray-200 rounded-full h-1.5">
-                  <motion.div
-                    className="bg-blue-600 h-1.5 rounded-full"
-                    initial={{ width: "33%" }}
-                    animate={{ 
-                      width: currentStage === 'input' ? "33%" : 
-                             currentStage === 'understanding' ? "66%" : "100%" 
-                    }}
-                    transition={{ duration: 0.5 }}
-                  />
-                </div>
-                <span className="text-xs text-gray-500 font-medium">
-                  {currentStage === 'input' && 'Step 1 of 3'}
-                  {currentStage === 'understanding' && 'Step 2 of 3'}
-                  {currentStage === 'solution' && 'Complete'}
-                </span>
-              </div>
-            </motion.div>
+              <span className="text-xs text-gray-500 font-medium">
+                {currentStage === 'input' && 'Step 1 of 3'}
+                {currentStage === 'understanding' && 'Step 2 of 3'}
+                {currentStage === 'solution' && 'Complete'}
+              </span>
+            </div>
+          </motion.div>
 
-            {/* Content */}
-            <AnimatePresence mode="wait">
-              {currentStage === 'input' && renderInputStage()}
-              {currentStage === 'understanding' && renderUnderstandingStage()}
-              {currentStage === 'solution' && renderSolutionStage()}
-            </AnimatePresence>
-          </div>
+          {/* Content */}
+          <AnimatePresence mode="wait">
+            {currentStage === 'input' && renderInputStage()}
+            {currentStage === 'understanding' && renderUnderstandingStage()}
+            {currentStage === 'solution' && renderSolutionStage()}
+          </AnimatePresence>
         </div>
       </div>
     </ProtectedRoute>
