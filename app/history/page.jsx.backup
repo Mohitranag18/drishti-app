@@ -141,199 +141,456 @@ const HistoryScreen = () => {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
-        <div className="px-4 sm:px-6 lg:px-8 pb-24 max-w-md mx-auto">
-          
-          {/* Header */}
-          <motion.div 
-            className="pt-12 pb-6"
-            {...fadeInUp}
-          >
-            <div className="flex items-center gap-4 mb-4">
-              <motion.button
-                onClick={() => window.history.back()}
-                className="p-2 rounded-full bg-white shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </motion.button>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  Session History
-                </h1>
-                <p className="text-gray-600 text-sm sm:text-base">
-                  Your perspective journey
-                </p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Search and Filter */}
-          <motion.div 
-            className="mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <form onSubmit={handleSearch} className="mb-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search sessions..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-colors"
-                />
-              </div>
-            </form>
-
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {[
-                { key: 'all', label: 'All' },
-                { key: 'completed', label: 'Completed' },
-                { key: 'understanding', label: 'In Progress' },
-                { key: 'input', label: 'Started' }
-              ].map((filter) => (
-                <motion.button
-                  key={filter.key}
-                  onClick={() => handleFilterChange(filter.key)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                    filterStatus === filter.key
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                  }`}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+        {/* Desktop Layout */}
+        <div className="hidden lg:block">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8 pb-24">
+            <div className="grid lg:grid-cols-12 gap-8">
+              {/* Left Sidebar - Filters & Stats */}
+              <div className="lg:col-span-3">
+                <motion.div 
+                  className="pt-12 pb-6"
+                  {...fadeInUp}
                 >
-                  {filter.label}
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Sessions List */}
-          <motion.div
-            variants={staggerChildren}
-            initial="initial"
-            animate="animate"
-            className="space-y-3"
-          >
-            {loading ? (
-              <div className="space-y-3">
-                {[...Array(3)].map((_, index) => (
-                  <motion.div
-                    key={index}
-                    className="bg-white rounded-2xl p-4 border border-gray-200 animate-pulse"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
-                    <div className="flex justify-between items-center">
-                      <div className="h-3 bg-gray-200 rounded w-20"></div>
-                      <div className="h-6 bg-gray-200 rounded w-16"></div>
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                      <BookOpen className="w-6 h-6 text-white" />
                     </div>
-                  </motion.div>
-                ))}
-              </div>
-            ) : filteredSessions.length === 0 ? (
-              <motion.div
-                className="text-center py-12"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                  No sessions found
-                </h3>
-                <p className="text-gray-500 text-sm">
-                  {searchTerm || filterStatus !== 'all' 
-                    ? 'Try adjusting your search or filter'
-                    : 'Start your first perspective session to see it here'
-                  }
-                </p>
-              </motion.div>
-            ) : (
-              filteredSessions.map((session, index) => (
-                <motion.div
-                  key={session.id}
-                  className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                  variants={fadeInUp}
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleSessionClick(session)}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className="text-gray-900 font-semibold text-sm mb-1 line-clamp-2">
-                        {session.userInput}
-                      </h3>
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <Calendar className="w-3 h-3" />
-                        <span>{formatDate(session.date)}</span>
-                        <Clock className="w-3 h-3 ml-2" />
-                        <span>{formatTime(session.date)}</span>
-                      </div>
+                    <div>
+                      <h1 className="text-2xl font-bold text-gray-900">
+                        Session History
+                      </h1>
+                      <p className="text-gray-600 text-sm">
+                        Your perspective journey
+                      </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(session.status)}`}>
-                        {getStatusText(session.status)}
-                      </span>
-                      <ChevronRight className="w-4 h-4 text-gray-400" />
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1">
-                        <Lightbulb className="w-3 h-3" />
-                        <span>{session.cardsCount} cards</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Target className="w-3 h-3" />
-                        <span>{session.quizzesCount} quizzes</span>
-                      </div>
-                    </div>
-                    {session.savedToJournal && (
-                      <div className="flex items-center gap-1 text-green-600">
-                        <BookOpen className="w-3 h-3" />
-                        <span>Saved</span>
-                      </div>
-                    )}
                   </div>
                 </motion.div>
-              ))
-            )}
-          </motion.div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <motion.div 
-              className="flex justify-center gap-2 mt-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              {[...Array(totalPages)].map((_, index) => (
-                <motion.button
-                  key={index}
-                  onClick={() => fetchSessions(index + 1, searchTerm, filterStatus)}
-                  className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${
-                    currentPage === index + 1
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                  }`}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                {/* Search */}
+                <motion.div 
+                  className="mb-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
                 >
-                  {index + 1}
+                  <form onSubmit={handleSearch}>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search sessions..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-colors"
+                      />
+                    </div>
+                  </form>
+                </motion.div>
+
+                {/* Filter Buttons */}
+                <motion.div 
+                  className="space-y-2 mb-8"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Filter by Status</h3>
+                  {[
+                    { key: 'all', label: 'All Sessions' },
+                    { key: 'completed', label: 'Completed' },
+                    { key: 'understanding', label: 'In Progress' },
+                    { key: 'input', label: 'Started' }
+                  ].map((filter) => (
+                    <motion.button
+                      key={filter.key}
+                      onClick={() => handleFilterChange(filter.key)}
+                      className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                        filterStatus === filter.key
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      {filter.label}
+                    </motion.button>
+                  ))}
+                </motion.div>
+
+                {/* Stats Summary */}
+                <motion.div
+                  className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Session Summary</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Total Sessions</span>
+                      <span className="font-semibold text-gray-900">{sessions.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Completed</span>
+                      <span className="font-semibold text-green-600">
+                        {sessions.filter(s => s.status === 'completed').length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">In Progress</span>
+                      <span className="font-semibold text-yellow-600">
+                        {sessions.filter(s => s.status === 'understanding').length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Started</span>
+                      <span className="font-semibold text-blue-600">
+                        {sessions.filter(s => s.status === 'input').length}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Main Content - Sessions List */}
+              <div className="lg:col-span-9">
+                <motion.div 
+                  className="pt-12 pb-6"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Recent Sessions</h2>
+                  <p className="text-gray-600 text-sm">Your latest perspective exploration sessions</p>
+                </motion.div>
+
+                {/* Sessions Grid */}
+                <motion.div
+                  variants={staggerChildren}
+                  initial="initial"
+                  animate="animate"
+                  className="grid grid-cols-1 xl:grid-cols-2 gap-6"
+                >
+                  {loading ? (
+                    <div className="col-span-full space-y-4">
+                      {[...Array(4)].map((_, index) => (
+                        <motion.div
+                          key={index}
+                          className="bg-white rounded-2xl p-6 border border-gray-200 animate-pulse"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
+                          <div className="h-3 bg-gray-200 rounded w-1/2 mb-4"></div>
+                          <div className="flex justify-between items-center">
+                            <div className="h-3 bg-gray-200 rounded w-20"></div>
+                            <div className="h-6 bg-gray-200 rounded w-16"></div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : filteredSessions.length === 0 ? (
+                    <motion.div
+                      className="col-span-full text-center py-16"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.3 }}
+                    >
+                      <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                        No sessions found
+                      </h3>
+                      <p className="text-gray-500 text-sm">
+                        {searchTerm || filterStatus !== 'all' 
+                          ? 'Try adjusting your search or filter'
+                          : 'Start your first perspective session to see it here'
+                        }
+                      </p>
+                    </motion.div>
+                  ) : (
+                    filteredSessions.map((session, index) => (
+                      <motion.div
+                        key={session.id}
+                        className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                        variants={fadeInUp}
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleSessionClick(session)}
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <h3 className="text-gray-900 font-semibold text-base mb-2 line-clamp-2">
+                              {session.userInput}
+                            </h3>
+                            <div className="flex items-center gap-3 text-sm text-gray-500">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                <span>{formatDate(session.date)}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-4 h-4" />
+                                <span>{formatTime(session.date)}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(session.status)}`}>
+                              {getStatusText(session.status)}
+                            </span>
+                            <ChevronRight className="w-4 h-4 text-gray-400" />
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-sm text-gray-500">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-1">
+                              <Lightbulb className="w-4 h-4" />
+                              <span>{session.cardsCount} cards</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Target className="w-4 h-4" />
+                              <span>{session.quizzesCount} quizzes</span>
+                            </div>
+                          </div>
+                          {session.savedToJournal && (
+                            <div className="flex items-center gap-1 text-green-600">
+                              <BookOpen className="w-4 h-4" />
+                              <span>Saved</span>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
+                </motion.div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <motion.div 
+                    className="flex justify-center gap-2 mt-8"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    {[...Array(totalPages)].map((_, index) => (
+                      <motion.button
+                        key={index}
+                        onClick={() => fetchSessions(index + 1, searchTerm, filterStatus)}
+                        className={`w-10 h-10 rounded-full text-sm font-medium transition-colors ${
+                          currentPage === index + 1
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                        }`}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        {index + 1}
+                      </motion.button>
+                    ))}
+                  </motion.div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Layout - Keep existing */}
+        <div className="block lg:hidden">
+          <div className="px-4 sm:px-6 lg:px-8 pb-24 max-w-md mx-auto">
+            
+            {/* Header */}
+            <motion.div 
+              className="pt-12 pb-6"
+              {...fadeInUp}
+            >
+              <div className="flex items-center gap-4 mb-4">
+                <motion.button
+                  onClick={() => window.history.back()}
+                  className="p-2 rounded-full bg-white shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <ArrowLeft className="w-5 h-5 text-gray-600" />
                 </motion.button>
-              ))}
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    Session History
+                  </h1>
+                  <p className="text-gray-600 text-sm sm:text-base">
+                    Your perspective journey
+                  </p>
+                </div>
+              </div>
             </motion.div>
-          )}
+
+            {/* Search and Filter */}
+            <motion.div 
+              className="mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <form onSubmit={handleSearch} className="mb-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search sessions..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-colors"
+                  />
+                </div>
+              </form>
+
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {[
+                  { key: 'all', label: 'All' },
+                  { key: 'completed', label: 'Completed' },
+                  { key: 'understanding', label: 'In Progress' },
+                  { key: 'input', label: 'Started' }
+                ].map((filter) => (
+                  <motion.button
+                    key={filter.key}
+                    onClick={() => handleFilterChange(filter.key)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                      filterStatus === filter.key
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                    }`}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {filter.label}
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Sessions List */}
+            <motion.div
+              variants={staggerChildren}
+              initial="initial"
+              animate="animate"
+              className="space-y-3"
+            >
+              {loading ? (
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, index) => (
+                    <motion.div
+                      key={index}
+                      className="bg-white rounded-2xl p-4 border border-gray-200 animate-pulse"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
+                      <div className="flex justify-between items-center">
+                        <div className="h-3 bg-gray-200 rounded w-20"></div>
+                        <div className="h-6 bg-gray-200 rounded w-16"></div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : filteredSessions.length === 0 ? (
+                <motion.div
+                  className="text-center py-12"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                    No sessions found
+                  </h3>
+                  <p className="text-gray-500 text-sm">
+                    {searchTerm || filterStatus !== 'all' 
+                      ? 'Try adjusting your search or filter'
+                      : 'Start your first perspective session to see it here'
+                    }
+                  </p>
+                </motion.div>
+              ) : (
+                filteredSessions.map((session, index) => (
+                  <motion.div
+                    key={session.id}
+                    className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                    variants={fadeInUp}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleSessionClick(session)}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h3 className="text-gray-900 font-semibold text-sm mb-1 line-clamp-2">
+                          {session.userInput}
+                        </h3>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <Calendar className="w-3 h-3" />
+                          <span>{formatDate(session.date)}</span>
+                          <Clock className="w-3 h-3 ml-2" />
+                          <span>{formatTime(session.date)}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(session.status)}`}>
+                          {getStatusText(session.status)}
+                        </span>
+                        <ChevronRight className="w-4 h-4 text-gray-400" />
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1">
+                          <Lightbulb className="w-3 h-3" />
+                          <span>{session.cardsCount} cards</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Target className="w-3 h-3" />
+                          <span>{session.quizzesCount} quizzes</span>
+                        </div>
+                      </div>
+                      {session.savedToJournal && (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <BookOpen className="w-3 h-3" />
+                          <span>Saved</span>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </motion.div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <motion.div 
+                className="flex justify-center gap-2 mt-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                {[...Array(totalPages)].map((_, index) => (
+                  <motion.button
+                    key={index}
+                    onClick={() => fetchSessions(index + 1, searchTerm, filterStatus)}
+                    className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${
+                      currentPage === index + 1
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                    }`}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    {index + 1}
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
+          </div>
         </div>
 
         {/* Session Detail Modal */}

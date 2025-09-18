@@ -13,13 +13,14 @@ import {
   Filter,
   Search,
   Eye,
-  EyeOff
+  EyeOff,
+  Play
 } from 'lucide-react';
 import ProtectedRoute from '../components/ProtectedRoute';
-// import { useApp } from '../context/AppContext';
+import { useApp } from '../context/AppContext';
 
 const HistoryScreen = () => {
-  // const { setCurrentView } = useApp();
+  const { setCurrentView, setContinueSession } = useApp();
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSession, setSelectedSession] = useState(null);
@@ -97,6 +98,43 @@ const HistoryScreen = () => {
     setShowModal(true);
   };
 
+  const handleContinueSession = async (session) => {
+    try {
+      const token = getAuthToken();
+      
+      // Fetch detailed session data including quiz questions
+      const response = await fetch(`/api/perspective/session/${session.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch session details');
+      }
+
+      const sessionData = await response.json();
+      console.log("🔍 Session data from API:", sessionData);
+      console.log("🔍 Quizzes from API:", sessionData.session?.quizzes);
+      
+      // Set continue session data
+      setContinueSession({
+        sessionId: session.id,
+        userInput: session.userInput,
+        quizQuestions: sessionData.session.quizzes || [],
+        quizAnswers: sessionData.session.quizAnswers || {},
+        sessionData: sessionData
+      });
+
+      // Navigate to perspective page
+      setCurrentView('perspective');
+    } catch (error) {
+      console.error('Error continuing session:', error);
+      alert('Failed to continue session. Please try again.');
+    }
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -118,7 +156,6 @@ const HistoryScreen = () => {
     switch (status) {
       case 'completed': return 'bg-green-100 text-green-800';
       case 'understanding': return 'bg-yellow-100 text-yellow-800';
-      case 'input': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -127,7 +164,6 @@ const HistoryScreen = () => {
     switch (status) {
       case 'completed': return 'Completed';
       case 'understanding': return 'In Progress';
-      case 'input': return 'Started';
       default: return 'Unknown';
     }
   };
@@ -198,8 +234,7 @@ const HistoryScreen = () => {
                   {[
                     { key: 'all', label: 'All Sessions' },
                     { key: 'completed', label: 'Completed' },
-                    { key: 'understanding', label: 'In Progress' },
-                    { key: 'input', label: 'Started' }
+                    { key: 'understanding', label: 'In Progress' }
                   ].map((filter) => (
                     <motion.button
                       key={filter.key}
@@ -240,12 +275,6 @@ const HistoryScreen = () => {
                       <span className="text-gray-600">In Progress</span>
                       <span className="font-semibold text-yellow-600">
                         {sessions.filter(s => s.status === 'understanding').length}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Started</span>
-                      <span className="font-semibold text-blue-600">
-                        {sessions.filter(s => s.status === 'input').length}
                       </span>
                     </div>
                   </div>
@@ -312,11 +341,10 @@ const HistoryScreen = () => {
                     filteredSessions.map((session, index) => (
                       <motion.div
                         key={session.id}
-                        className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                        className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
                         variants={fadeInUp}
                         whileHover={{ scale: 1.02, y: -2 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => handleSessionClick(session)}
                       >
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex-1">
@@ -358,6 +386,29 @@ const HistoryScreen = () => {
                               <BookOpen className="w-4 h-4" />
                               <span>Saved</span>
                             </div>
+                          )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="mt-4 flex gap-2">
+                          <motion.button
+                            onClick={() => handleSessionClick(session)}
+                            className="flex-1 py-2 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            View Details
+                          </motion.button>
+                          {session.status === 'understanding' && (
+                            <motion.button
+                              onClick={() => handleContinueSession(session)}
+                              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <Play className="w-4 h-4" />
+                              Continue Session
+                            </motion.button>
                           )}
                         </div>
                       </motion.div>
@@ -448,8 +499,7 @@ const HistoryScreen = () => {
                 {[
                   { key: 'all', label: 'All' },
                   { key: 'completed', label: 'Completed' },
-                  { key: 'understanding', label: 'In Progress' },
-                  { key: 'input', label: 'Started' }
+                  { key: 'understanding', label: 'In Progress' }
                 ].map((filter) => (
                   <motion.button
                     key={filter.key}
@@ -516,11 +566,10 @@ const HistoryScreen = () => {
                 filteredSessions.map((session, index) => (
                   <motion.div
                     key={session.id}
-                    className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                    className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
                     variants={fadeInUp}
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => handleSessionClick(session)}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
@@ -558,6 +607,29 @@ const HistoryScreen = () => {
                           <BookOpen className="w-3 h-3" />
                           <span>Saved</span>
                         </div>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="mt-3 flex gap-2">
+                      <motion.button
+                        onClick={() => handleSessionClick(session)}
+                        className="flex-1 py-2 px-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-xs font-medium"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        View Details
+                      </motion.button>
+                      {session.status === 'understanding' && (
+                        <motion.button
+                          onClick={() => handleContinueSession(session)}
+                          className="flex-1 py-2 px-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium flex items-center justify-center gap-1"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <Play className="w-3 h-3" />
+                          Continue
+                        </motion.button>
                       )}
                     </div>
                   </motion.div>

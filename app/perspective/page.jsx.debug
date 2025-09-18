@@ -37,8 +37,6 @@ const PerspectiveScreen = () => {
       setSessionId(continueSessionId);
       setUserInput(continueUserInput);
       setQuizQuestions(continueQuizQuestions);
-      console.log("🔍 Setting quiz questions:", continueQuizQuestions);
-      console.log("🔍 Quiz questions length:", continueQuizQuestions?.length);
       setQuizAnswers(continueQuizAnswers);
       
       // Navigate to understanding stage since we're continuing from quiz

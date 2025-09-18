@@ -11,7 +11,6 @@ const initialState = {
   perspectiveStage: 'input',
   aiQuestions: [],
   currentQuestionIndex: 0,
-  continueSession: null, // { sessionId, userInput, quizQuestions, quizAnswers, sessionData }
 };
 
 const AppContext = createContext(undefined);
@@ -40,10 +39,6 @@ function appReducer(state, action) {
       return { ...state, aiQuestions: action.payload };
     case 'SET_CURRENT_QUESTION_INDEX':
       return { ...state, currentQuestionIndex: action.payload };
-    case 'SET_CONTINUE_SESSION':
-      return { ...state, continueSession: action.payload };
-    case 'CLEAR_CONTINUE_SESSION':
-      return { ...state, continueSession: null };
     case 'RESET_STATE':
       return initialState;
     default:
@@ -84,14 +79,6 @@ export function AppProvider({ children }) {
 
   const setCurrentQuestionIndex = (index) => {
     dispatch({ type: 'SET_CURRENT_QUESTION_INDEX', payload: index });
-  };
-
-  const setContinueSession = (sessionData) => {
-    dispatch({ type: 'SET_CONTINUE_SESSION', payload: sessionData });
-  };
-
-  const clearContinueSession = () => {
-    dispatch({ type: 'CLEAR_CONTINUE_SESSION' });
   };
 
   const nextQuestion = () => {
@@ -154,8 +141,6 @@ export function AppProvider({ children }) {
         setPerspectiveStage,
         setAIQuestions,
         setCurrentQuestionIndex,
-        setContinueSession,
-        clearContinueSession,
         nextQuestion,
         submitInput,
         completeUnderstanding,
@@ -172,4 +157,4 @@ export function useApp() {
     throw new Error('useApp must be used within an AppProvider');
   }
   return context;
-}
+} 
