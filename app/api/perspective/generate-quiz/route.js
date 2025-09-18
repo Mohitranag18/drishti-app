@@ -1,19 +1,24 @@
-// app/api/perspective/generate-quiz/route.js 
+// app/api/perspective/generate-quiz/route.js - With debugging
 import { NextResponse } from 'next/server';
-import { GoogleGenAI, FunctionCallingConfigMode } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { prisma } from '../../../../lib/prisma';
 import { authenticateUser } from '../../../../lib/auth';
 
 export async function POST(request) {
   try {
-
+    // Debug: Check if API key exists
+    console.log('🔍 GEMINI_API_KEY exists:', !!process.env.GEMINI_API_KEY);
+    console.log('🔍 GEMINI_API_KEY length:', process.env.GEMINI_API_KEY?.length || 0);
+    
     if (!process.env.GEMINI_API_KEY) {
-      console.error('GEMINI_API_KEY is missing from environment variables');
+      console.error('❌ GEMINI_API_KEY is missing from environment variables');
       return NextResponse.json({ error: 'Gemini API key not configured' }, { status: 500 });
     }
 
-    const genAI = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
-    
+    // Initialize Gemini AI
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+    // Authenticate user
     const { user, error } = await authenticateUser(request);
     if (error) {
       return NextResponse.json({ error }, { status: 401 });
@@ -26,6 +31,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Session ID and user input are required' }, { status: 400 });
     }
 
+    // Verify session belongs to user
     const session = await prisma.perspectiveSession.findFirst({
       where: {
         id: sessionId,
@@ -37,74 +43,8 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
-    const quizSchema = {
-      name: "generateQuizQuestions",
-      description: "Generates quiz questions for a perspective session",
-      parametersJsonSchema: {
-        type: "object",
-        properties: {
-          questions: {
-            type: "array",
-            items: {
-              oneOf: [
-                {
-                  type: "object",
-                  properties: {
-                    type: { type: "string", enum: ["text"] },
-                    question: { type: "string" },
-                    placeholder: { type: "string" }
-                  },
-                  required: ["type", "question", "placeholder"]
-                },
-                {
-                  type: "object",
-                  properties: {
-                    type: { type: "string", enum: ["multiple_choice"] },
-                    question: { type: "string" },
-                    options: { 
-                      type: "array", 
-                      items: { type: "string" },
-                      minItems: 4,
-                      maxItems: 4
-                    }
-                  },
-                  required: ["type", "question", "options"]
-                },
-                {
-                  type: "object",
-                  properties: {
-                    type: { type: "string", enum: ["scale"] },
-                    question: { type: "string" },
-                    min: { type: "number" },
-                    max: { type: "number" },
-                    minLabel: { type: "string" },
-                    maxLabel: { type: "string" }
-                  },
-                  required: ["type", "question", "min", "max", "minLabel", "maxLabel"]
-                },
-                {
-                  type: "object",
-                  properties: {
-                    type: { type: "string", enum: ["emoji"] },
-                    question: { type: "string" },
-                    options: { 
-                      type: "array", 
-                      items: { type: "string" },
-                      minItems: 4,
-                      maxItems: 4
-                    }
-                  },
-                  required: ["type", "question", "options"]
-                }
-              ]
-            },
-            minItems: 4,
-            maxItems: 4
-          }
-        },
-        required: ["questions"]
-      }
-    };
+    // Generate quiz questions using Gemini Pro
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
     
     const prompt = `
     Based on this user's situation: "${userInput}"
@@ -145,63 +85,26 @@ export async function POST(request) {
       ]
     }`;
 
-    console.log('Generating quiz with structured streaming...');
-    const stream = await genAI.models.generateContentStream({
-      model: 'gemini-1.5-flash',
-      contents: prompt,
-      config: {
-        tools: [{
-          functionDeclarations: [quizSchema]
-        }],
-        toolConfig: {
-          functionCallingConfig: {
-            mode: FunctionCallingConfigMode.ANY
-          }
-        }
-      }
-    });
+    console.log('🔍 Sending request to Gemini...');
+    const result = await model.generateContent(prompt);
+    console.log('✅ Received response from Gemini');
     
-    let generatedQuiz = { questions: [] };
-    let fullText = '';
+    const response = result.response.text();
     
-    for await (const chunk of stream) {
-      // Collect raw text for debugging
-      if (chunk.text) {
-        fullText += chunk.text;
-      }
-      
-      // Collect structured data
-      if (chunk.functionCalls && chunk.functionCalls.length > 0) {
-        const data = chunk.functionCalls[0].args;
-        if (data.questions) {
-          generatedQuiz.questions = data.questions;
-        }
-      }
+    let quizData;
+    try {
+      // Clean the response by removing markdown code fences
+      const cleanedResponse = response.replace(/^```json\s*|```$/g, '');
+      quizData = JSON.parse(cleanedResponse);
+    } catch (parseError) {
+      console.error('Failed to parse Gemini response:', parseError);
+      console.error('Raw response:', response);
+      return NextResponse.json({ error: 'Failed to generate quiz questions' }, { status: 500 });
     }
-    
-    console.log('Received quiz stream');
-    
-    if (generatedQuiz.questions.length === 0) {
-      console.log('No structured data received, parsing raw text');
-      try {
-        // Try to parse raw text output
-        const jsonMatch = fullText.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-          throw new Error('No valid JSON found in AI response');
-        }
-        generatedQuiz = JSON.parse(jsonMatch[0]);
-      } catch (parseError) {
-        console.error('Failed to parse Gemini response:', parseError);
-        console.error('Raw response:', fullText);
-        return NextResponse.json({ error: 'Failed to generate quiz questions' }, { status: 500 });
-      }
-    }
-    
-    console.log('Generated quiz:', JSON.stringify(generatedQuiz, null, 2));
 
     // Save questions to database
     const savedQuestions = [];
-    for (const question of generatedQuiz.questions) {
+    for (const question of quizData.questions) {
       const savedQuestion = await prisma.perspectiveQuizz.create({
         data: {
           session_id: sessionId,

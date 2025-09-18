@@ -14,6 +14,9 @@ const config = {
       },
     },
   },
+  plugins: [
+    require('@tailwindcss/line-clamp'),
+  ],
 }
 
 module.exports = config

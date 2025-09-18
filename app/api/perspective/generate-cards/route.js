@@ -1,10 +1,10 @@
 // app/api/perspective/generate-cards/route.js
 import { NextResponse } from 'next/server';
-import { GoogleGenAI, FunctionCallingConfigMode } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { prisma } from '../../../../lib/prisma';
 import { authenticateUser } from '../../../../lib/auth';
 
-const genAI = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function POST(request) {
   try {
@@ -44,72 +44,47 @@ export async function POST(request) {
       context += `  Answer: "${quiz.answer_text || quiz.emojis_option || quiz.scale_min || quiz.mcq_options}"\n`;
     });
 
-    // Schema for perspective cards
-    const cardsSchema = {
-      name: "generatePerspectiveCards",
-      description: "Generates perspective cards for a perspective session",
-      parametersJsonSchema: {
-        type: "object",
-        properties: {
-          cards: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                title: { type: "string" },
-                content: { type: "string" },
-                card_type: { 
-                  type: "string",
-                  enum: ["growth", "compassion", "action", "insight"]
-                }
-              },
-              required: ["title", "content", "card_type"]
-            },
-            minItems: 3,
-            maxItems: 3
-          }
-        },
-        required: ["cards"]
-      }
-    };
+    // Generate perspective cards using Gemini Pro
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
     
     const prompt = `
-    Based on the following context, write 3 short, supportive perspective cards. 
-
-    Make them:
-    - Conversational and easy to read (like advice from a friend, not a textbook).
-    - No jargon or long sentences.
-    - Each card should have a clear, catchy title and 3–5 sentences of content.
-    - Tone: encouraging, natural, and empathetic.
-    - Each card should offer a different angle: growth, compassion, action, or insight.
-
+    Based on the following context, generate 3 unique perspective cards. Each card should offer a different way to look at the situation, provide actionable advice, or highlight a key insight.
+    
     Context:
     ${context}
-
-    Now generate exactly 3 perspective cards in this structure:
-    `;
-
-
-    const result = await genAI.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: prompt,
-      config: {
-        tools: [{
-          functionDeclarations: [cardsSchema]
-        }],
-        toolConfig: {
-          functionCallingConfig: {
-            mode: FunctionCallingConfigMode.ANY
-          }
+    
+    Return ONLY a valid JSON object with this exact structure:
+    {
+      "cards": [
+        {
+          "title": "Card Title 1",
+          "content": "Detailed content for card 1, offering a new perspective or actionable advice.",
+          "card_type": "growth" // Can be 'growth', 'compassion', 'action', or 'insight'
+        },
+        {
+          "title": "Card Title 2",
+          "content": "Detailed content for card 2, offering a new perspective or actionable advice.",
+          "card_type": "compassion"
+        },
+        {
+          "title": "Card Title 3",
+          "content": "Detailed content for card 3, offering a new perspective or actionable advice.",
+          "card_type": "action"
         }
-      }
-    });
+      ]
+    }`;
+
+    const result = await model.generateContent(prompt);
+    const response = result.response.text();
     
     let cardsData;
     try {
-      cardsData = { cards: result.functionCalls[0].args.cards };
+      // Clean the response by removing markdown code fences
+      const cleanedResponse = response.replace(/^```json\s*|```$/g, '');
+      cardsData = JSON.parse(cleanedResponse);
     } catch (parseError) {
       console.error('Failed to parse Gemini response for cards:', parseError);
+      console.error('Raw response:', response);
       return NextResponse.json({ error: 'Failed to generate perspective cards' }, { status: 500 });
     }
 
