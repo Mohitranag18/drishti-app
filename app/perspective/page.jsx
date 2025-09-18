@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Send, RotateCcw, Lightbulb, Heart, Target, TrendingUp, Sparkles } from 'lucide-react';
 import ProtectedRoute from '../components/ProtectedRoute';
-// import { useApp } from '../context/AppContext';
+import PerspectiveChatbot from '../components/PerspectiveChatbot';
 
 const PerspectiveScreen = () => {
   // const { setCurrentView } = useApp();
@@ -550,8 +550,8 @@ const PerspectiveScreen = () => {
       {/* Perspective Cards */}
       <div className="space-y-6">
         {perspectiveCards.map((card, index) => {
-          const IconComponent = getCardIcon(card.type);
-          const gradientClass = getCardGradient(card.type);
+          const IconComponent = getCardIcon(card.card_type);
+          const gradientClass = getCardGradient(card.card_type);
 
           return (
             <motion.div
@@ -610,6 +610,14 @@ const PerspectiveScreen = () => {
         })}
       </div>
 
+      {/* Chatbot */}
+      {sessionId && perspectiveCards.length > 0 && (
+        <PerspectiveChatbot 
+          sessionId={sessionId} 
+          cards={perspectiveCards} 
+          userInput={userInput} 
+        />
+      )}
 
       {/* Action Buttons */}
       <div className="grid grid-cols-2 gap-3">
