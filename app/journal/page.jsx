@@ -56,7 +56,7 @@ const JournalScreen = () => {
 
   const moodEmojis = {
     '😊': { emoji: '😊', color: 'text-green-500', bg: 'bg-green-50', label: 'Happy' },
-    '😐': { emoji: '��', color: 'text-yellow-500', bg: 'bg-yellow-50', label: 'Neutral' },
+    '😐': { emoji: '😐', color: 'text-yellow-500', bg: 'bg-yellow-50', label: 'Neutral' },
     '😔': { emoji: '😔', color: 'text-blue-500', bg: 'bg-blue-50', label: 'Sad' },
     '😟': { emoji: '😟', color: 'text-red-500', bg: 'bg-red-50', label: 'Stressed' },
     '🧠': { emoji: '🧠', color: 'text-purple-500', bg: 'bg-purple-50', label: 'Thoughtful' },
@@ -330,30 +330,9 @@ const JournalScreen = () => {
                   </div>
                 </motion.div>
 
-                {/* Stats Cards */}
-                <motion.div 
-                  className="space-y-4 mb-8"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <div className="bg-white rounded-xl p-6 border border-gray-200 text-center shadow-sm">
-                    <div className="text-3xl font-bold text-gray-900 mb-1">{stats.totalEntries}</div>
-                    <div className="text-sm text-gray-500">Total Entries</div>
-                  </div>
-                  <div className="bg-white rounded-xl p-6 border border-gray-200 text-center shadow-sm">
-                    <div className="text-3xl font-bold text-gray-900 mb-1">{stats.currentStreak}</div>
-                    <div className="text-sm text-gray-500">Day Streak</div>
-                  </div>
-                  <div className="bg-white rounded-xl p-6 border border-gray-200 text-center shadow-sm">
-                    <div className="text-3xl font-bold text-gray-900 mb-1">{stats.favoriteEntries}</div>
-                    <div className="text-sm text-gray-500">High Quality</div>
-                  </div>
-                </motion.div>
-
                 {/* Search and Filter */}
                 <motion.div 
-                  className="space-y-4"
+                  className="space-y-4 mb-8"
                   {...fadeInUp}
                 >
                   <div className="relative">
@@ -390,6 +369,27 @@ const JournalScreen = () => {
                         <span className="text-sm font-medium">{filter.label}</span>
                       </motion.button>
                     ))}
+                  </div>
+                </motion.div>
+
+                {/* Stats Cards */}
+                <motion.div 
+                  className="space-y-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <div className="bg-white rounded-xl p-6 border border-gray-200 text-center shadow-sm">
+                    <div className="text-3xl font-bold text-gray-900 mb-1">{stats.totalEntries}</div>
+                    <div className="text-sm text-gray-500">Total Entries</div>
+                  </div>
+                  <div className="bg-white rounded-xl p-6 border border-gray-200 text-center shadow-sm">
+                    <div className="text-3xl font-bold text-gray-900 mb-1">{stats.currentStreak}</div>
+                    <div className="text-sm text-gray-500">Day Streak</div>
+                  </div>
+                  <div className="bg-white rounded-xl p-6 border border-gray-200 text-center shadow-sm">
+                    <div className="text-3xl font-bold text-gray-900 mb-1">{stats.favoriteEntries}</div>
+                    <div className="text-sm text-gray-500">High Quality</div>
                   </div>
                 </motion.div>
               </div>
