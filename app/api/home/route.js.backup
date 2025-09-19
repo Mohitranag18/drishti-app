@@ -71,85 +71,27 @@ export async function GET(request) {
       })
     ]);
 
-    // Get 7-day mood trend - try daily summaries first, fallback to raw mood data
+    // Get 7-day mood trend for chart
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    let moodTrends = [];
-
-    // Try to get data from daily summaries first (if table exists)
-    try {
-      moodTrends = await prisma.dailySummary.findMany({
-        where: {
-          user_id: user.id,
-          date: {
-            gte: sevenDaysAgo,
-            lte: now
-          }
-        },
-        orderBy: { date: 'asc' },
-        select: {
-          date: true,
-          mood_rate: true,
-          mood_emoji: true,
-          overall_wellness: true,
-          ai_summary: true,
-          happiness_score: true,
-          sadness_score: true,
-          anxiety_score: true,
-          energy_score: true,
-          loneliness_score: true
+    const moodTrends = await prisma.mood.findMany({
+      where: {
+        user_id: user.id,
+        date: {
+          gte: sevenDaysAgo,
+          lte: now
         }
-      });
-    } catch (error) {
-      // If dailySummary table doesn't exist, fall back to raw mood data
-      console.log('DailySummary table not available, using raw mood data');
-      moodTrends = [];
-    }
+      },
+      orderBy: { date: 'asc' },
+      select: {
+        date: true,
+        mood_rate: true,
+        mood_emoji: true
+      }
+    });
 
-    // If no daily summaries available, fallback to raw mood data
-    if (moodTrends.length === 0) {
-      const rawMoodTrends = await prisma.mood.findMany({
-        where: {
-          user_id: user.id,
-          date: {
-            gte: sevenDaysAgo,
-            lte: now
-          }
-        },
-        orderBy: { date: 'asc' },
-        select: {
-          date: true,
-          mood_rate: true,
-          mood_emoji: true
-        }
-      });
-
-      // Convert raw mood data to the same format as daily summaries
-      // Group by date and take the most recent entry for each day
-      const moodByDate = {};
-      rawMoodTrends.forEach(mood => {
-        const dateKey = mood.date.toISOString().split('T')[0];
-        if (!moodByDate[dateKey] || mood.date > moodByDate[dateKey].date) {
-          moodByDate[dateKey] = mood;
-        }
-      });
-      
-      moodTrends = Object.values(moodByDate).map(mood => ({
-        date: mood.date,
-        mood_rate: mood.mood_rate,
-        mood_emoji: mood.mood_emoji,
-        overall_wellness: mood.mood_rate, // Use mood_rate as wellness score
-        ai_summary: null,
-        happiness_score: null,
-        sadness_score: null,
-        anxiety_score: null,
-        energy_score: null,
-        loneliness_score: null
-      }));
-    }
-
-    // Process mood trends for chart (ensure we have 7 days)
+    // Process mood trends for chart
     const chartData = [];
     for (let i = 0; i < 7; i++) {
       const currentDate = new Date(sevenDaysAgo);
@@ -157,24 +99,14 @@ export async function GET(request) {
       
       const dayMood = moodTrends.find(mood => {
         const moodDate = new Date(mood.date);
-        const moodDateString = moodDate.toISOString().split('T')[0];
-        const currentDateString = currentDate.toISOString().split('T')[0];
-        return moodDateString === currentDateString;
+        return moodDate.toDateString() === currentDate.toDateString();
       });
 
       chartData.push({
         date: currentDate.toISOString().split('T')[0],
         day: currentDate.toLocaleDateString('en-US', { weekday: 'short' }),
         mood_rate: dayMood ? dayMood.mood_rate : null,
-        mood_emoji: dayMood ? dayMood.mood_emoji : null,
-        // Include AI analysis data if available
-        overall_wellness: dayMood ? dayMood.overall_wellness : null,
-        ai_summary: dayMood ? dayMood.ai_summary : null,
-        happiness_score: dayMood ? dayMood.happiness_score : null,
-        sadness_score: dayMood ? dayMood.sadness_score : null,
-        anxiety_score: dayMood ? dayMood.anxiety_score : null,
-        energy_score: dayMood ? dayMood.energy_score : null,
-        loneliness_score: dayMood ? dayMood.loneliness_score : null
+        mood_emoji: dayMood ? dayMood.mood_emoji : null
       });
     }
 
