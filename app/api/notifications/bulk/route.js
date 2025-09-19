@@ -4,7 +4,6 @@ import { authenticateUser } from '../../../../lib/auth';
 
 const prisma = new PrismaClient();
 
-// PUT /api/notifications/bulk - Bulk operations on notifications
 export async function PUT(request) {
   try {
     const { user, error } = await authenticateUser(request);

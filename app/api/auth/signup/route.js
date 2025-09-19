@@ -1,4 +1,3 @@
-// app/api/auth/signup/route.js
 import { hashPassword } from '../../../../lib/auth';
 import { prisma } from '../../../../lib/prisma';
 import { NextResponse } from 'next/server';

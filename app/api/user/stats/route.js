@@ -1,4 +1,3 @@
-// app/api/user/stats/route.js
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
 import { authenticateUser } from '../../../../lib/auth';
@@ -11,8 +10,6 @@ export async function GET(request) {
       return NextResponse.json({ error }, { status: 401 });
     }
 
-    // Get current date info for streak calculation
-    // const now = new Date();
     const today = new Date().toISOString().split('T')[0];
 
     // Get completed perspective sessions count

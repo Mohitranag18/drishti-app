@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { authenticateUser } from '../../../../lib/auth';
 import notificationService from '../../../../lib/notificationService';
 
-// POST /api/notifications/generate - Generate notifications based on user actions
 export async function POST(request) {
   try {
     const { user, error } = await authenticateUser(request);

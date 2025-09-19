@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Home, Edit3, Bell, Settings, BookOpen } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
 

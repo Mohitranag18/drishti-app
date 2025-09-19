@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { motion } from 'framer-motion';
 
 const MoodTrendChart = ({ data = [], isLoading = false }) => {
@@ -33,7 +32,6 @@ const MoodTrendChart = ({ data = [], isLoading = false }) => {
     );
   }
 
-  // Calculate chart dimensions - fully responsive
   const chartHeight = 180;
   const maxMoodRate = 10;
   
@@ -214,7 +212,6 @@ const MoodTrendChart = ({ data = [], isLoading = false }) => {
         })()}
       </div>
 
-      {/* AI Analysis Details (if available) - better layout for desktop */}
       {hasAIAnalysis && (
         <div className="mt-3 p-3 bg-blue-50 rounded-lg">
           <div className="text-xs font-medium text-blue-800 mb-2">Wellness Breakdown:</div>

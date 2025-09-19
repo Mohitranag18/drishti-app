@@ -1,11 +1,9 @@
-// app/api/daily-summary/route.js
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
 import { authenticateUser } from '../../../lib/auth';
 import { analyzeDailyMood } from '../../../lib/aiService';
 import { getDateNumbers } from '../../../lib/journalUtils';
 
-// GET /api/daily-summary - Get daily summaries for a user
 export async function GET(request) {
   try {
     const { user, error } = await authenticateUser(request);
@@ -69,7 +67,6 @@ export async function GET(request) {
   }
 }
 
-// POST /api/daily-summary - Generate daily summary for a specific date
 export async function POST(request) {
   try {
     const { user, error } = await authenticateUser(request);

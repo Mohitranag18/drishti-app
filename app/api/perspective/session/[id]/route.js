@@ -1,4 +1,3 @@
-// app/api/perspective/session/[id]/route.js
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../../lib/prisma';
 import { authenticateUser } from '../../../../../lib/auth';

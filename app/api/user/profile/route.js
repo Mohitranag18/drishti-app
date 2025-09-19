@@ -1,4 +1,3 @@
-// app/api/user/profile/route.js
 import { authenticateUser } from '../../../../lib/auth';
 import { prisma } from '../../../../lib/prisma';
 import { NextResponse } from 'next/server';
@@ -12,8 +11,6 @@ export async function PATCH(request) {
     }
 
     const body = await request.json();
-    
-    // Validate and sanitize input
     const allowedFields = ['first_name', 'last_name', 'username', 'email'];
     const updateData = {};
     
@@ -26,7 +23,6 @@ export async function PATCH(request) {
           );
         }
         
-        // Additional validation for specific fields
         if (key === 'email') {
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailRegex.test(value)) {

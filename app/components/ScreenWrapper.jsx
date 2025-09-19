@@ -1,7 +1,5 @@
 'use client';
 
-import React from 'react';
-
 const ScreenWrapper = ({ title, subtitle, children, showBackButton = false }) => {
   return (
     <div className="px-4 pb-24">

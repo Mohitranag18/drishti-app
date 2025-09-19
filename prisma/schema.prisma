@@ -5,7 +5,7 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  directUrl = env("DATABASE_URL")
 }
 
 model User {
@@ -31,9 +31,6 @@ model User {
   moods                Mood[]
   notifications        Notification[]
   perspective_sessions PerspectiveSession[]
-
-  journals          Journal[]
-  notifications     Notification[]
   conversations     Conversation[]
   
   @@map("users")

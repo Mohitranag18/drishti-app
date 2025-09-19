@@ -1,4 +1,3 @@
-// app/api/user/preferences/route.js
 import { authenticateUser } from '../../../../lib/auth';
 import { prisma } from '../../../../lib/prisma';
 import { NextResponse } from 'next/server';

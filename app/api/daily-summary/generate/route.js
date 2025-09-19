@@ -1,11 +1,9 @@
-// app/api/daily-summary/generate/route.js
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
 import { authenticateUser } from '../../../../lib/auth';
 import { analyzeDailyMood } from '../../../../lib/aiService';
 import { getDateNumbers } from '../../../../lib/journalUtils';
 
-// POST /api/daily-summary/generate - Manually generate daily summary for current user
 export async function POST(request) {
   try {
     const { user, error } = await authenticateUser(request);

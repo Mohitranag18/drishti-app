@@ -1,4 +1,3 @@
-// app/api/journal/stats/route.js
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
 import { authenticateUser } from '../../../../lib/auth';

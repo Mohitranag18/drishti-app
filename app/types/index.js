@@ -64,4 +64,5 @@
  */
 
 // Export empty object to maintain module structure
-export default {}; 
+const types = {};
+export default types; 

@@ -1,8 +1,6 @@
 'use client';
 
-import React from 'react';
 import { AppProvider, useApp } from './context/AppContext.jsx';
-import { useAuth } from './context/AuthContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Header from './components/Header.jsx';
 import Navigation from './components/Navigation.jsx';

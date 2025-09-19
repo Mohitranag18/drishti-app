@@ -1,13 +1,10 @@
-// app/api/daily-summary/generate-batch/route.js
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
 import { analyzeDailyMood } from '../../../../lib/aiService';
 import { getDateNumbers } from '../../../../lib/journalUtils';
 
-// POST /api/daily-summary/generate-batch - Generate daily summaries for all users (cron job)
 export async function POST(request) {
   try {
-    // Verify this is a cron job request (add your secret key verification here)
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET || 'your-cron-secret';
     

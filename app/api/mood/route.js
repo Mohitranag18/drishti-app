@@ -1,10 +1,8 @@
-// app/api/mood/route.js
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
 import { authenticateUser } from '../../../lib/auth';
 import { getDateNumbers } from '../../../lib/journalUtils';
 
-// GET /api/mood - Get mood data for the user
 export async function GET(request) {
   try {
     const { user, error } = await authenticateUser(request);

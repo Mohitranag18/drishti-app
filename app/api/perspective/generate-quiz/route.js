@@ -1,4 +1,3 @@
-// app/api/perspective/generate-quiz/route.js 
 import { NextResponse } from 'next/server';
 import { GoogleGenAI, FunctionCallingConfigMode } from '@google/genai';
 import { prisma } from '../../../../lib/prisma';

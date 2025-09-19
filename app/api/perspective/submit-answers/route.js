@@ -1,11 +1,9 @@
-// app/api/perspective/submit-answers/route.js
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
 import { authenticateUser } from '../../../../lib/auth';
 
 export async function POST(request) {
   try {
-    // Authenticate user
     const { user, error } = await authenticateUser(request);
     if (error) {
       return NextResponse.json({ error }, { status: 401 });

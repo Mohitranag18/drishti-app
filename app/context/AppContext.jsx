@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext, useReducer } from 'react';
 
 const initialState = {
   currentView: 'home',
@@ -105,9 +105,7 @@ export function AppProvider({ children }) {
   const submitInput = async () => {
     if (state.userInput.trim()) {
       setLoading(true);
-      // Simulate AI processing time
       setTimeout(() => {
-        // Mock AI questions based on user input
         const mockQuestions = [
           {
             id: 'mood',
