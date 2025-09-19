@@ -1,4 +1,3 @@
-// app/api/perspective/generate-cards/route.js
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { prisma } from '../../../../lib/prisma';
@@ -109,7 +108,7 @@ export async function POST(request) {
     });
 
     // Award points for completing the session
-    const pointsEarned = 50; // Example points
+    const pointsEarned = 50;
     await prisma.user.update({
       where: { id: user.id },
       data: { total_points: { increment: pointsEarned } }

@@ -1,9 +1,8 @@
 'use client';
  
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  User, 
   Mail, 
   Lock, 
   LogOut, 
@@ -16,22 +15,16 @@ import {
   FileText, 
   HelpCircle,
   ChevronRight,
-  Edit3,
   Settings,
   X,
   Loader2
 } from 'lucide-react';
 import ProtectedRoute from '../components/ProtectedRoute';
-// import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 
 const ProfileScreen = () => {
-  // const { setCurrentView } = useApp();
   const { user, logout, updateUser } = useAuth();
-  
-  // Profile states
   const [isLoading, setIsLoading] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [userStats, setUserStats] = useState({
     completedSessions: 0,
@@ -106,7 +99,6 @@ const ProfileScreen = () => {
 
   // Update user preferences with debouncing
   const updatePreference = async (key, value) => {
-    // Optimistically update the UI immediately
     setPreferences(prev => ({
       ...prev,
       [key]: value
@@ -129,7 +121,6 @@ const ProfileScreen = () => {
         updateUser(updatedUser.user);
       } else {
         console.error('Failed to update preference');
-        // Revert the change if it failed
         setPreferences(prev => ({
           ...prev,
           [key]: !value
@@ -137,7 +128,6 @@ const ProfileScreen = () => {
       }
     } catch (error) {
       console.error('Error updating preference:', error);
-      // Revert the change if it failed
       setPreferences(prev => ({
         ...prev,
         [key]: !value

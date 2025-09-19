@@ -4,14 +4,13 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  url = env("DATABASE_URL")
 }
 
 model User {
   id                   String               @id @default(cuid())
+  clerkId              String               @unique
   email                String               @unique
-  password_hash        String
   username             String               @unique
   first_name           String
   last_name            String
@@ -31,7 +30,8 @@ model User {
   moods                Mood[]
   notifications        Notification[]
   perspective_sessions PerspectiveSession[]
-
+  conversations     Conversation[]
+  
   @@map("users")
 }
 
@@ -65,6 +65,8 @@ model PerspectiveSession {
   quizzes          PerspectiveQuizz[]
   user             User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+  conversations    Conversation[]
+  
   @@map("perspective_sessions")
 }
 
@@ -126,4 +128,18 @@ model Notification {
   user          User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("notifications")
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  user_id   String
+  session_id String
+  message   String
+  response  String?
+  created_at DateTime @default(now())
+  
+  user      User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  session   PerspectiveSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  
+  @@map("conversations")
 }

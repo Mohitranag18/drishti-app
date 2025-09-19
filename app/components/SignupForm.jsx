@@ -1,4 +1,3 @@
-// components/SignupForm.jsx
 'use client';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';

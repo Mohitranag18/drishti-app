@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Send, RotateCcw, Lightbulb, Heart, Target, TrendingUp, Sparkles } from 'lucide-react';
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -29,16 +29,11 @@ const PerspectiveScreen = () => {
   useEffect(() => {
     if (state.continueSession) {
       const { sessionId: continueSessionId, userInput: continueUserInput, quizQuestions: continueQuizQuestions, quizAnswers: continueQuizAnswers } = state.continueSession;
-      console.log("🔍 Continue session data:", state.continueSession);
-      console.log("🔍 Quiz questions:", continueQuizQuestions);
-      console.log("🔍 Quiz answers:", continueQuizAnswers);
       
       // Set the session data
       setSessionId(continueSessionId);
       setUserInput(continueUserInput);
       setQuizQuestions(continueQuizQuestions);
-      console.log("🔍 Setting quiz questions:", continueQuizQuestions);
-      console.log("🔍 Quiz questions length:", continueQuizQuestions?.length);
       setQuizAnswers(continueQuizAnswers);
       
       // Navigate to understanding stage since we're continuing from quiz
