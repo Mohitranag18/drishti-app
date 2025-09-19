@@ -32,6 +32,10 @@ model User {
   notifications        Notification[]
   perspective_sessions PerspectiveSession[]
 
+  journals          Journal[]
+  notifications     Notification[]
+  conversations     Conversation[]
+  
   @@map("users")
 }
 
@@ -65,6 +69,8 @@ model PerspectiveSession {
   quizzes          PerspectiveQuizz[]
   user             User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+  conversations    Conversation[]
+  
   @@map("perspective_sessions")
 }
 
@@ -126,4 +132,18 @@ model Notification {
   user          User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("notifications")
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  user_id   String
+  session_id String
+  message   String
+  response  String?
+  created_at DateTime @default(now())
+  
+  user      User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  session   PerspectiveSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  
+  @@map("conversations")
 }
