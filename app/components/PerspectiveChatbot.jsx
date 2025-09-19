@@ -11,7 +11,7 @@ const PerspectiveChatbot = ({ sessionId, cards, userInput }) => {
   const [error, setError] = useState('');
   const messagesEndRef = useRef(null);
 
-  const getAuthToken = () => localStorage.getItem('token');
+  
   const storageKey = sessionId ? `perspective-chat:${sessionId}` : null;
 
   // Hydrate messages from storage on mount/session change
@@ -70,12 +70,11 @@ const PerspectiveChatbot = ({ sessionId, cards, userInput }) => {
     setInputMessage('');
 
     try {
-      const token = getAuthToken();
       const response = await fetch('/api/perspective/chat', {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           sessionId,

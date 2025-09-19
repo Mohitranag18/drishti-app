@@ -14,7 +14,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from "../context/AuthContext";
 import MoodTrendChart from '../components/MoodTrendChart';
 import EnhancedMoodSelector from '../components/EnhancedMoodSelector';
 
@@ -22,7 +22,7 @@ export const dynamic = 'force-dynamic';
 
 const HomeScreen = () => {
   const { setCurrentView } = useApp();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [currentCarouselIndex, setCurrentCarouselIndex] = useState(0);
   const [homeData, setHomeData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,16 +44,23 @@ const HomeScreen = () => {
 
   // Load home page data
   useEffect(() => {
-    loadHomeData();
-  }, []);
+    if (user && isAuthenticated) {
+      loadHomeData();
+    }
+  }, [user, isAuthenticated]);
 
   const loadHomeData = async () => {
+    if (!isAuthenticated) {
+      console.log('User not authenticated, skipping home data load');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
-      const response = await fetch('/api/home', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+
+      const response = await fetch("/api/home", {
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -61,19 +68,22 @@ const HomeScreen = () => {
         setHomeData(data);
         setTodayMood(data.todayMood);
       } else {
-        console.error('Failed to load home data');
+        console.error("Failed to load home data:", response.status);
       }
     } catch (error) {
-      console.error('Error loading home data:', error);
+      console.error("Error loading home data:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
+
   const handleMoodSave = (mood) => {
     setTodayMood(mood);
     // Refresh data to update recommendations and chart
-    loadHomeData();
+    if (isAuthenticated) {
+      loadHomeData();
+    }
   };
 
   // Generate mood-based inspirational cards

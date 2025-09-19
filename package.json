@@ -19,6 +19,7 @@
     "db:validate": "node scripts/validate-db.js"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.32.0",
     "@google/genai": "^1.20.0",
     "@prisma/client": "^6.16.2",
     "@tailwindcss/line-clamp": "^0.4.4",

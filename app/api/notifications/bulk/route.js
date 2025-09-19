@@ -1,15 +1,25 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { authenticateUser } from '../../../../lib/auth';
+import { auth } from '@clerk/nextjs/server';
 
 const prisma = new PrismaClient();
 
 export async function PUT(request) {
   try {
-    const { user, error } = await authenticateUser(request);
-    if (error) {
-      return NextResponse.json({ error }, { status: 401 });
+    const { userId } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const localUser = await prisma.user.findUnique({
+      where: { clerkId: userId },
+    });
+
+    if (!localUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const user = localUser;
 
     const body = await request.json();
     const { action, notification_ids } = body;

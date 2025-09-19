@@ -1,16 +1,26 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { authenticateUser } from '../../../../lib/auth';
+import { auth } from '@clerk/nextjs/server';
 
 const prisma = new PrismaClient();
 
 // PUT /api/notifications/[id] - Update a notification (mark as read, etc.)
 export async function PUT(request, { params }) {
   try {
-    const { user, error } = await authenticateUser(request);
-    if (error) {
-      return NextResponse.json({ error }, { status: 401 });
+    const { userId } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const localUser = await prisma.user.findUnique({
+      where: { clerkId: userId },
+    });
+
+    if (!localUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const user = localUser;
 
     const { id } = params;
     const body = await request.json();
@@ -49,23 +59,33 @@ export async function PUT(request, { params }) {
   }
 }
 
-// DELETE /api/notifications/[id] - Delete a notification
-export async function DELETE(request, { params }) {
-  try {
-    const { user, error } = await authenticateUser(request);
-    if (error) {
-      return NextResponse.json({ error }, { status: 401 });
-    }
-
-    const { id } = params;
-
-    // First check if the notification belongs to the user
-    const existingNotification = await prisma.notification.findFirst({
-      where: {
-        id: id,
-        user_id: user.id
+  // DELETE /api/notifications/[id] - Delete a notification
+  export async function DELETE(request, { params }) {
+    try {
+      const { userId } = auth();
+      if (!userId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
-    });
+
+      const localUser = await prisma.user.findUnique({
+        where: { clerkId: userId },
+      });
+
+      if (!localUser) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+
+      const user = localUser;
+
+      const { id } = params;
+
+      // First check if the notification belongs to the user
+      const existingNotification = await prisma.notification.findFirst({
+        where: {
+          id: id,
+          user_id: user.id
+        }
+      });
 
     if (!existingNotification) {
       return NextResponse.json(

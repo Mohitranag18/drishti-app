@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI, FunctionCallingConfigMode } from '@google/genai';
 import { prisma } from '../../../../lib/prisma';
-import { authenticateUser } from '../../../../lib/auth';
+import { getAuthenticatedUser } from '../../../../lib/authUtils';
 
 export async function POST(request) {
   try {
-
     if (!process.env.GEMINI_API_KEY) {
       console.error('GEMINI_API_KEY is missing from environment variables');
       return NextResponse.json({ error: 'Gemini API key not configured' }, { status: 500 });
@@ -13,10 +12,8 @@ export async function POST(request) {
 
     const genAI = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
     
-    const { user, error } = await authenticateUser(request);
-    if (error) {
-      return NextResponse.json({ error }, { status: 401 });
-    }
+    const { user, error } = await getAuthenticatedUser(request);
+    if (error) return error;
 
     const body = await request.json();
     const { sessionId, userInput } = body;
