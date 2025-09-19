@@ -71,41 +71,33 @@ export async function GET(request) {
       })
     ]);
 
-    // Get 7-day mood trend - try daily summaries first, fallback to raw mood data
+    // Get 7-day mood trend from daily summaries (preferred) or fallback to raw mood data
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    let moodTrends = [];
-
-    // Try to get data from daily summaries first (if table exists)
-    try {
-      moodTrends = await prisma.dailySummary.findMany({
-        where: {
-          user_id: user.id,
-          date: {
-            gte: sevenDaysAgo,
-            lte: now
-          }
-        },
-        orderBy: { date: 'asc' },
-        select: {
-          date: true,
-          mood_rate: true,
-          mood_emoji: true,
-          overall_wellness: true,
-          ai_summary: true,
-          happiness_score: true,
-          sadness_score: true,
-          anxiety_score: true,
-          energy_score: true,
-          loneliness_score: true
+    // Try to get data from daily summaries first
+    let moodTrends = await prisma.dailySummary.findMany({
+      where: {
+        user_id: user.id,
+        date: {
+          gte: sevenDaysAgo,
+          lte: now
         }
-      });
-    } catch (error) {
-      // If dailySummary table doesn't exist, fall back to raw mood data
-      console.log('DailySummary table not available, using raw mood data');
-      moodTrends = [];
-    }
+      },
+      orderBy: { date: 'asc' },
+      select: {
+        date: true,
+        mood_rate: true,
+        mood_emoji: true,
+        overall_wellness: true,
+        ai_summary: true,
+        happiness_score: true,
+        sadness_score: true,
+        anxiety_score: true,
+        energy_score: true,
+        loneliness_score: true
+      }
+    });
 
     // If no daily summaries available, fallback to raw mood data
     if (moodTrends.length === 0) {
@@ -126,16 +118,7 @@ export async function GET(request) {
       });
 
       // Convert raw mood data to the same format as daily summaries
-      // Group by date and take the most recent entry for each day
-      const moodByDate = {};
-      rawMoodTrends.forEach(mood => {
-        const dateKey = mood.date.toISOString().split('T')[0];
-        if (!moodByDate[dateKey] || mood.date > moodByDate[dateKey].date) {
-          moodByDate[dateKey] = mood;
-        }
-      });
-      
-      moodTrends = Object.values(moodByDate).map(mood => ({
+      moodTrends = rawMoodTrends.map(mood => ({
         date: mood.date,
         mood_rate: mood.mood_rate,
         mood_emoji: mood.mood_emoji,
@@ -157,9 +140,7 @@ export async function GET(request) {
       
       const dayMood = moodTrends.find(mood => {
         const moodDate = new Date(mood.date);
-        const moodDateString = moodDate.toISOString().split('T')[0];
-        const currentDateString = currentDate.toISOString().split('T')[0];
-        return moodDateString === currentDateString;
+        return moodDate.toDateString() === currentDate.toDateString();
       });
 
       chartData.push({

@@ -90,7 +90,7 @@ const EnhancedMoodSelector = ({
             transition={{ delay: moods.indexOf(mood) * 0.05 }}
           >
             <div className="text-2xl mb-1">{mood.emoji}</div>
-            <div className="text-xs font-medium text-gray-600">
+            <div className="text-[10px] md:text-[9px] font-medium text-gray-600 text-center break-words leading-tight">
               {mood.label}
             </div>
             
@@ -107,6 +107,7 @@ const EnhancedMoodSelector = ({
           </motion.button>
         ))}
       </div>
+
 
       {/* Intensity Rating */}
       {selectedMood && (

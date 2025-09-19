@@ -1,105 +1,98 @@
-// prisma/schema.postgresql.prisma - PostgreSQL schema for production
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id                String   @id @default(cuid())
-  email             String   @unique
-  password_hash     String
-  username          String   @unique
-  first_name        String
-  last_name         String
-  avatar_url        String?
-  is_verified       Boolean  @default(false)
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-  total_points      Int      @default(0)
-  current_streak    Int      @default(0)
-  longest_streak    Int      @default(0)
-  push_notification Boolean  @default(true)
-  dark_mode         Boolean  @default(false)
-  wellness_reminders Boolean @default(true)
-  weekly_summary    Boolean  @default(true)
-  sessions          Int      @default(0)
-  
-  // Relations
-  moods             Mood[]
+  id                   String               @id @default(cuid())
+  email                String               @unique
+  password_hash        String
+  username             String               @unique
+  first_name           String
+  last_name            String
+  avatar_url           String?
+  is_verified          Boolean              @default(false)
+  created_at           DateTime             @default(now())
+  updated_at           DateTime             @updatedAt
+  total_points         Int                  @default(0)
+  current_streak       Int                  @default(0)
+  longest_streak       Int                  @default(0)
+  push_notification    Boolean              @default(true)
+  dark_mode            Boolean              @default(false)
+  wellness_reminders   Boolean              @default(true)
+  weekly_summary       Boolean              @default(true)
+  sessions             Int                  @default(0)
+  journals             Journal[]
+  moods                Mood[]
+  notifications        Notification[]
   perspective_sessions PerspectiveSession[]
-  journals          Journal[]
-  notifications     Notification[]
-  
+
   @@map("users")
 }
 
 model Mood {
-  id        String   @id @default(cuid())
-  user_id   String
-  date      DateTime
-  day       Int
-  week      Int
-  month     Int
-  mood_rate Int      // 1-5
-  mood_emoji String? // Added mood emoji field
-  
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  
+  id         String   @id @default(cuid())
+  user_id    String
+  date       DateTime
+  day        Int
+  week       Int
+  month      Int
+  mood_rate  Int
+  mood_emoji String?
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
   @@map("moods")
 }
 
 model PerspectiveSession {
-  id               String   @id @default(cuid())
+  id               String             @id @default(cuid())
   user_id          String
-  date             DateTime @default(now())
+  date             DateTime           @default(now())
   day              Int
   week             Int
   month            Int
   user_input       String
-  created_at       DateTime @default(now())
-  status           String   @default("input") // input/understanding/completed
+  created_at       DateTime           @default(now())
+  status           String             @default("input")
   completed_at     DateTime?
-  saved_to_journal Boolean  @default(false)
-  
-  user             User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  quizzes          PerspectiveQuizz[]
+  saved_to_journal Boolean            @default(false)
   cards            PerspectiveCard[]
-  
+  quizzes          PerspectiveQuizz[]
+  user             User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
   @@map("perspective_sessions")
 }
 
 model PerspectiveQuizz {
-  id            String   @id @default(cuid())
+  id            String             @id @default(cuid())
   session_id    String
   question_type String
   question_text String
-  answer_type   String   // text/emojis/scale/multiple_choice
+  answer_type   String
   answer_text   String?
   text_option   String?
-  emojis_option Json?    // ["emoji1","emoji2","emoji3","emoji4"]
-  scale_min     Int?     @default(1)
-  scale_max     Int?     @default(5)
-  mcq_options   Json?    // ["a","b","c","d"]
-  
-  session PerspectiveSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
-  
+  emojis_option Json?
+  scale_min     Int?               @default(1)
+  scale_max     Int?               @default(5)
+  mcq_options   Json?
+  session       PerspectiveSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+
   @@map("perspective_quizzes")
 }
 
 model PerspectiveCard {
-  id         String @id @default(cuid())
+  id         String             @id @default(cuid())
   session_id String
   title      String
   content    String
   card_type  String
-  
-  session PerspectiveSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
-  
+  session    PerspectiveSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+
   @@map("perspective_cards")
 }
 
@@ -114,10 +107,9 @@ model Journal {
   points_earned Int      @default(0)
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
-  tags          Json?    // ["tag1", "tag2"]
-  
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  
+  tags          Json?
+  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
   @@map("journals")
 }
 
@@ -131,8 +123,7 @@ model Notification {
   scheduled_for DateTime?
   sent_at       DateTime?
   created_at    DateTime  @default(now())
-  
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  
+  user          User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
   @@map("notifications")
 }
