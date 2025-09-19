@@ -3,7 +3,6 @@ import { GoogleGenAI } from '@google/genai';
 import { prisma } from '../../../../lib/prisma';
 import { authenticateUser } from '../../../../lib/auth';
 
-// Ensure Node.js runtime for this route
 export const runtime = 'nodejs';
 
 const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -76,7 +75,6 @@ export async function POST(request) {
       }
     }
 
-    // Create chat session using the new Chats API with a system instruction
     const systemInstruction = `
 You are a compassionate AI coach helping users explore their perspective cards.
 Focus on the user's situation and insights from their cards.

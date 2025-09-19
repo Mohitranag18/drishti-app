@@ -1,9 +1,7 @@
-// app/api/home/route.js
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
 import { authenticateUser } from '../../../lib/auth';
 
-// GET /api/home - Get personalized home page data
 export async function GET(request) {
   try {
     const { user, error } = await authenticateUser(request);
@@ -77,7 +75,6 @@ export async function GET(request) {
 
     let moodTrends = [];
 
-    // Try to get data from daily summaries first (if table exists)
     try {
       moodTrends = await prisma.dailySummary.findMany({
         where: {
@@ -102,12 +99,10 @@ export async function GET(request) {
         }
       });
     } catch (error) {
-      // If dailySummary table doesn't exist, fall back to raw mood data
-      console.log('DailySummary table not available, using raw mood data');
       moodTrends = [];
+      console.error('Error fetching daily summaries:', error);
     }
 
-    // If no daily summaries available, fallback to raw mood data
     if (moodTrends.length === 0) {
       const rawMoodTrends = await prisma.mood.findMany({
         where: {
@@ -167,7 +162,6 @@ export async function GET(request) {
         day: currentDate.toLocaleDateString('en-US', { weekday: 'short' }),
         mood_rate: dayMood ? dayMood.mood_rate : null,
         mood_emoji: dayMood ? dayMood.mood_emoji : null,
-        // Include AI analysis data if available
         overall_wellness: dayMood ? dayMood.overall_wellness : null,
         ai_summary: dayMood ? dayMood.ai_summary : null,
         happiness_score: dayMood ? dayMood.happiness_score : null,
@@ -205,7 +199,6 @@ export async function GET(request) {
   }
 }
 
-// Generate smart recommendations based on user data
 function generateSmartRecommendations(todayMood, journalCount, sessionCount) {
   const recommendations = [];
 

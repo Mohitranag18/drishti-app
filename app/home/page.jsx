@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   BookOpen, 
@@ -8,7 +8,6 @@ import {
   ChevronRight,
   ChevronLeft,
   RefreshCw,
-  Bell,
   Heart,
   Brain,
   Users,
@@ -16,12 +15,9 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
-
-// Import the new components
 import MoodTrendChart from '../components/MoodTrendChart';
 import EnhancedMoodSelector from '../components/EnhancedMoodSelector';
 
-// Force dynamic rendering to prevent static generation issues
 export const dynamic = 'force-dynamic';
 
 const HomeScreen = () => {

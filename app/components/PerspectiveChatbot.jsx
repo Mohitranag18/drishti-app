@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, MessageCircle, X, Bot } from 'lucide-react';
+import { Send, Bot } from 'lucide-react';
 
 const PerspectiveChatbot = ({ sessionId, cards, userInput }) => {
   const [messages, setMessages] = useState([]);

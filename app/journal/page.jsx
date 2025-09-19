@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   PlusCircle, 
@@ -8,25 +8,19 @@ import {
   Search, 
   Filter,
   BookOpen,
-  Heart,
   Smile,
   Frown,
   Meh,
-  Edit3,
   Trash2,
   ChevronRight,
-  Star,
   Clock,
   AlertCircle,
-  Loader,
   RefreshCw
 } from 'lucide-react';
 import ProtectedRoute from '../components/ProtectedRoute';
 import JournalDetailModal from '../components/JournalDetailModal';
-// import { useApp } from '../context/AppContext';
 
 const JournalScreen = () => {
-  // const { setCurrentView } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMood, setSelectedMood] = useState('all');
   const [showNewEntry, setShowNewEntry] = useState(false);

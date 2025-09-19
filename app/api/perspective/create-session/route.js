@@ -1,4 +1,3 @@
-// app/api/perspective/create-session/route.js
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
 import { authenticateUser } from '../../../../lib/auth';
@@ -38,7 +37,6 @@ export async function POST(request) {
       await notificationService.checkMilestones(user.id);
     } catch (notificationError) {
       console.error('Error generating notifications:', notificationError);
-      // Don't fail the main request if notifications fail
     }
 
     return NextResponse.json({

@@ -1,11 +1,9 @@
-// app/api/journal/[id]/route.js
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
 import { authenticateUser } from '../../../../lib/auth';
 
 export async function DELETE(request, { params }) {
   try {
-    // Authenticate user
     const { user, error } = await authenticateUser(request);
     if (error) {
       return NextResponse.json({ error }, { status: 401 });
@@ -33,14 +31,6 @@ export async function DELETE(request, { params }) {
     await prisma.journal.delete({
       where: { id: id }
     });
-
-    // Optionally deduct points (if you want to penalize deletion)
-    // await prisma.user.update({
-    //   where: { id: user.id },
-    //   data: {
-    //     total_points: { decrement: journal.points_earned }
-    //   }
-    // });
 
     return NextResponse.json({
       success: true,
