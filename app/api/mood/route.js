@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
-import { authenticateUser } from '../../../lib/auth';
+import { getAuthenticatedUser } from '../../../lib/authUtils';
 import { getDateNumbers } from '../../../lib/journalUtils';
 
 export async function GET(request) {
   try {
-    const { user, error } = await authenticateUser(request);
-    if (error) {
-      return NextResponse.json({ error }, { status: 401 });
-    }
-
+    
+    const { user, error } = await getAuthenticatedUser(request);
+    if (error) return error;
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'recent'; // recent, trends, today
     const days = parseInt(searchParams.get('days')) || 7;
@@ -96,11 +94,9 @@ export async function GET(request) {
 // POST /api/mood - Save daily mood check
 export async function POST(request) {
   try {
-    const { user, error } = await authenticateUser(request);
-    if (error) {
-      return NextResponse.json({ error }, { status: 401 });
-    }
-
+    
+    const { user, error } = await getAuthenticatedUser(request);
+    if (error) return error;
     const body = await request.json();
     const { mood_emoji, mood_rate } = body;
 

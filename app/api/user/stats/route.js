@@ -1,104 +1,161 @@
-import { NextResponse } from 'next/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { prisma } from '../../../../lib/prisma';
-import { authenticateUser } from '../../../../lib/auth';
+import { NextResponse } from 'next/server';
 
 export async function GET(request) {
   try {
-    // Authenticate user
-    const { user, error } = await authenticateUser(request);
-    if (error) {
-      return NextResponse.json({ error }, { status: 401 });
+    
+    // Check if user is authenticated via Clerk headers
+    const authStatus = request.headers.get('x-clerk-auth-status');
+    const authToken = request.headers.get('x-clerk-auth-token');
+    
+    if (authStatus !== 'signed-in') {
+      console.log('User not signed in according to Clerk headers');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const today = new Date().toISOString().split('T')[0];
-
-    // Get completed perspective sessions count
-    const completedSessions = await prisma.perspectiveSession.count({
-      where: {
-        user_id: user.id,
-        status: 'completed'
+    
+    let clerkUser;
+    let userId;
+    
+    try {
+      clerkUser = await currentUser();
+      if (clerkUser) {
+        userId = clerkUser.id;
       }
-    });
-
-    // Get journal entries for streak calculation
-    const recentEntries = await prisma.journal.findMany({
-      where: { user_id: user.id },
-      orderBy: { created_at: 'desc' },
-      take: 30,
-      select: {
-        created_at: true,
-        date: true
+    } catch (error) {
+      console.log('Error getting currentUser():', error.message);
+    }
+    
+    if (!userId) {
+      try {
+        const authResult = auth();
+        userId = authResult?.userId;
+      } catch (error) {
+        console.log('Error with auth():', error.message);
       }
-    });
-
-    // Calculate current streak
-    let currentStreak = 0;
-    const uniqueDates = [...new Set(recentEntries.map(entry => 
-      entry.date.toISOString().split('T')[0]
-    ))].sort().reverse();
-
-    if (uniqueDates.length > 0) {
-      let currentDate = new Date(today);
-      let streakDate = uniqueDates[0];
-      
-      if (streakDate === today) {
-        currentStreak = 1;
-        currentDate.setDate(currentDate.getDate() - 1);
-        
-        for (let i = 1; i < uniqueDates.length; i++) {
-          const expectedDate = currentDate.toISOString().split('T')[0];
-          if (uniqueDates[i] === expectedDate) {
-            currentStreak++;
-            currentDate.setDate(currentDate.getDate() - 1);
-          } else {
-            break;
-          }
-        }
-      } else {
-        // Check if yesterday has an entry
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
-        
-        if (streakDate === yesterdayStr) {
-          currentStreak = 1;
-          currentDate.setDate(currentDate.getDate() - 2);
-          
-          for (let i = 1; i < uniqueDates.length; i++) {
-            const expectedDate = currentDate.toISOString().split('T')[0];
-            if (uniqueDates[i] === expectedDate) {
-              currentStreak++;
-              currentDate.setDate(currentDate.getDate() - 1);
-            } else {
-              break;
-            }
-          }
-        }
+    }
+    
+    if (!userId && authToken) {
+      try {
+        const tokenPayload = JSON.parse(atob(authToken.split('.')[1]));
+        userId = tokenPayload.sub;
+      } catch (error) {
+        console.log('Error parsing JWT token:', error.message);
       }
     }
 
-    // Get total points
-    const totalPoints = await prisma.journal.aggregate({
-      where: { user_id: user.id },
-      _sum: {
-        points_earned: true
-      }
+    if (!userId) {
+      console.log('No userId found after all attempts');
+      return NextResponse.json({ error: 'Unauthorized - No user ID found' }, { status: 401 });
+    }
+
+    const localUser = await prisma.user.findUnique({
+      where: { clerkId: userId },
     });
+
+    if (!localUser) {
+      console.log('User not found in local database with clerkId:', userId);
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const user = localUser;
+    const localUserId = user.id;
+
+    const journalsCount = await prisma.journal.count({
+      where: { user_id: localUserId }
+    });
+
+    const moodsCount = await prisma.mood.count({
+      where: { user_id: localUserId }
+    });
+
+    const notificationsCount = await prisma.notification.count({
+      where: { user_id: localUserId }
+    });
+
+    const totalSessions = user.sessions;
+    const totalJournals = journalsCount;
+    const totalMoods = moodsCount;
+    const totalNotifications = notificationsCount;
+
+    const totalActivity = totalSessions + totalJournals + totalMoods;
+
+    const currentDate = new Date();
+    const oneWeekAgo = new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const recentActivity = await prisma.$queryRaw`
+      SELECT 
+        COUNT(*) as activity_count
+      FROM (
+        SELECT id FROM moods WHERE user_id = ${localUserId} AND date >= ${oneWeekAgo}
+        UNION ALL
+        SELECT id FROM journals WHERE user_id = ${localUserId} AND date >= ${oneWeekAgo}
+        UNION ALL
+        SELECT id FROM perspective_sessions WHERE user_id = ${localUserId} AND date >= ${oneWeekAgo}
+      ) as recent
+    `;
+
+    const recentActivityCount = parseInt(recentActivity[0].activity_count) || 0;
+
+    const avgMoodResult = await prisma.mood.aggregate({
+      where: { user_id: localUserId },
+      _avg: { mood_rate: true }
+    });
+    const averageMood = avgMoodResult._avg.mood_rate || 0;
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+    
+    const recentMoods = await prisma.mood.aggregate({
+      where: { 
+        user_id: localUserId,
+        date: { gte: sevenDaysAgo }
+      },
+      _avg: { mood_rate: true }
+    });
+    
+    const previousMoods = await prisma.mood.aggregate({
+      where: { 
+        user_id: localUserId,
+        date: { gte: fourteenDaysAgo, lt: sevenDaysAgo }
+      },
+      _avg: { mood_rate: true }
+    });
+    
+    const recentAvg = recentMoods._avg.mood_rate || 0;
+    const previousAvg = previousMoods._avg.mood_rate || 0;
+    const moodTrend = recentAvg - previousAvg;
+    const totalActivities = totalSessions + totalJournals + totalMoods;
+    const completionRate = totalActivities > 0 ? Math.min(100, (totalActivities / 30) * 100) : 0;
+
+    const wellnessScore = Math.min(100, Math.max(0, 
+      (user.total_points / 100) * 0.3 + 
+      (averageMood / 5) * 0.4 * 100 + 
+      (user.current_streak / 7) * 0.3 * 100
+    ));
+
+    const stats = {
+      total_points: user.total_points,
+      current_streak: user.current_streak,
+      longest_streak: user.longest_streak,
+      total_sessions: totalSessions,
+      total_journals: totalJournals,
+      total_moods: totalMoods,
+      total_notifications: totalNotifications,
+      total_activity: totalActivity,
+      recent_activity: recentActivityCount,
+      average_mood: Math.round(averageMood * 100) / 100,
+      mood_trend: Math.round(moodTrend * 100) / 100,
+      completion_rate: Math.round(completionRate * 100) / 100,
+      wellness_score: Math.round(wellnessScore * 100) / 100,
+    };
 
     return NextResponse.json({
       success: true,
-      stats: {
-        completedSessions,
-        currentStreak,
-        totalPoints: totalPoints._sum.points_earned || 0
-      }
+      stats
     });
 
   } catch (error) {
-    console.error('Error fetching user stats:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error('Get user stats error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -58,8 +58,8 @@ const HistoryScreen = () => {
       });
 
       const response = await fetch(`/api/perspective/history?${params}`, {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -104,8 +104,8 @@ const HistoryScreen = () => {
       
       // Fetch detailed session data including quiz questions
       const response = await fetch(`/api/perspective/session/${session.id}`, {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });

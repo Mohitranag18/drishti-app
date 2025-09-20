@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
+import { getAuthenticatedUser } from '../../../../lib/authUtils';
 import { prisma } from '../../../../lib/prisma';
-import { authenticateUser } from '../../../../lib/auth';
 
 export async function DELETE(request, { params }) {
   try {
-    const { user, error } = await authenticateUser(request);
-    if (error) {
-      return NextResponse.json({ error }, { status: 401 });
-    }
+    const { user, error } = await getAuthenticatedUser(request);
+    if (error) return error;
 
     const { id } = params;
 
@@ -48,11 +46,8 @@ export async function DELETE(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
-    // Authenticate user
-    const { user, error } = await authenticateUser(request);
-    if (error) {
-      return NextResponse.json({ error }, { status: 401 });
-    }
+    const { user, error } = await getAuthenticatedUser(request);
+    if (error) return error;
 
     const { id } = params;
     const body = await request.json();

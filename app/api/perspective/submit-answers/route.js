@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
-import { authenticateUser } from '../../../../lib/auth';
+import { getAuthenticatedUser } from '../../../../lib/authUtils';
 
 export async function POST(request) {
   try {
-    const { user, error } = await authenticateUser(request);
-    if (error) {
-      return NextResponse.json({ error }, { status: 401 });
-    }
+    const { user, error } = await getAuthenticatedUser(request);
+    if (error) return error;
 
     const body = await request.json();
     const { sessionId, answers } = body;

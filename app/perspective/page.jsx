@@ -59,9 +59,7 @@ const PerspectiveScreen = () => {
     return "Share what's bothering you, and I'll help you see it differently";
   };
 
-  const getAuthToken = () => {
-    return localStorage.getItem('token');
-  };
+  
 
   const handleSubmitInput = async () => {
     if (!userInput.trim()) return;
@@ -70,12 +68,11 @@ const PerspectiveScreen = () => {
     setError('');
 
     try {
-      const token = getAuthToken();
       const response = await fetch('/api/perspective/create-session', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ userInput: userInput.trim() })
       });
@@ -101,12 +98,11 @@ const PerspectiveScreen = () => {
 
   const generateQuizQuestions = async (sessionId) => {
     try {
-      const token = getAuthToken();
       const response = await fetch('/api/perspective/generate-quiz', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ 
           sessionId, 
@@ -141,8 +137,6 @@ const PerspectiveScreen = () => {
     setError('');
 
     try {
-      const token = getAuthToken();
-      
       // Submit answers
       const answersArray = Object.entries(quizAnswers).map(([questionId, value]) => ({
         questionId,
@@ -151,9 +145,9 @@ const PerspectiveScreen = () => {
 
       const submitResponse = await fetch('/api/perspective/submit-answers', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ 
           sessionId, 
@@ -169,9 +163,9 @@ const PerspectiveScreen = () => {
       // Generate perspective cards
       const cardsResponse = await fetch('/api/perspective/generate-cards', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ sessionId })
       });
@@ -196,12 +190,11 @@ const PerspectiveScreen = () => {
 
   const handleSaveToJournal = async () => {
     try {
-      const token = getAuthToken();
       const response = await fetch('/api/perspective/save-to-journal', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ sessionId })
       });

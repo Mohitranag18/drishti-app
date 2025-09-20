@@ -11,24 +11,14 @@ const NotificationsScreen = () => {
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const getAuthToken = () => {
-    return localStorage.getItem('token');
-  };
-
   // Fetch notifications from API
   const fetchNotifications = async () => {
     try {
       setRefreshing(true);
-      const token = getAuthToken();
-      if (!token) {
-        setError('Please log in to view notifications');
-        setLoading(false);
-        return;
-      }
 
       const response = await fetch('/api/notifications', {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -127,13 +117,10 @@ const NotificationsScreen = () => {
 
   const markAsRead = async (id) => {
     try {
-      const token = getAuthToken();
-      if (!token) return;
-
       const response = await fetch(`/api/notifications/${id}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ is_read: true }),
@@ -155,13 +142,10 @@ const NotificationsScreen = () => {
 
   const markAllAsRead = async () => {
     try {
-      const token = getAuthToken();
-      if (!token) return;
-
       const response = await fetch('/api/notifications/bulk', {
         method: 'PUT',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ action: 'mark_all_read' }),
@@ -181,14 +165,9 @@ const NotificationsScreen = () => {
 
   const deleteNotification = async (id) => {
     try {
-      const token = getAuthToken();
-      if (!token) return;
-
       const response = await fetch(`/api/notifications/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        }
+        credentials: 'include',
       });
 
       if (!response.ok) {
