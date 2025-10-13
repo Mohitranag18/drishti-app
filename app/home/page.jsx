@@ -473,28 +473,29 @@ const HomeScreen = () => {
                 return (
                   <div
                     key={index}
-                    className={`min-w-full h-48 sm:h-56 bg-gradient-to-br ${card.gradient} relative flex items-center justify-center p-6`}
+                    className={`min-w-full h-48 sm:h-56 bg-gradient-to-br ${card.gradient} relative flex items-center justify-center p-10 sm:p-14`}
                   >
-                    <div className="text-center max-w-sm">
+                    <div className="text-center mx-auto">
                       <motion.div
-                        className="mb-2"
+                        className="mb-1"
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ delay: 0.2 + index * 0.1 }}
                       >
-                        <IconComponent className="w-10 h-10 text-white/90 mx-auto" />
+                        <IconComponent className="w-6 h-6 sm:w-10 sm:h-10 text-white/90 mx-auto" />
                       </motion.div>
-                      <h3 className="text-lg sm:text-md px-6 font-semibold text-white mb-3 leading-relaxed">
+
+                      <h3 className="text-sm sm:text-lg font-semibold text-white mb-1 leading-relaxed">
                         {card.text}
                       </h3>
-                      <div className="text-white/80 text-sm">
-                        {index < 2 && homeData?.recommendations?.[index] ? 
-                          `Based on your current mood` : 
-                          `Daily inspiration`
-                        }
+
+                      <div className="text-white/80 text-sm sm:text-base">
+                        {index < 2 && homeData?.recommendations?.[index]
+                          ? `Based on your current mood`
+                          : `Daily inspiration`}
                       </div>
                     </div>
-                    
+
                     {/* Decorative elements */}
                     <div className="absolute top-4 right-4 opacity-20">
                       <div className="w-16 h-16 bg-white/20 rounded-full"></div>
@@ -510,7 +511,7 @@ const HomeScreen = () => {
             {/* Enhanced Carousel Controls */}
             <motion.button
               onClick={prevCarousel}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/40 transition-all shadow-lg"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/40 transition-all shadow-lg"
               whileHover={{ scale: 1.1, x: -2 }}
               whileTap={{ scale: 0.9 }}
             >
@@ -518,7 +519,7 @@ const HomeScreen = () => {
             </motion.button>
             <motion.button
               onClick={nextCarousel}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/40 transition-all shadow-lg"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/40 transition-all shadow-lg"
               whileHover={{ scale: 1.1, x: 2 }}
               whileTap={{ scale: 0.9 }}
             >

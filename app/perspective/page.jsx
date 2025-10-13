@@ -18,6 +18,7 @@ const PerspectiveScreen = () => {
   const [perspectiveCards, setPerspectiveCards] = useState([]);
   const [pointsEarned, setPointsEarned] = useState(0);
   const [error, setError] = useState('');
+  const [isSavingJournal, setIsSavingJournal] = useState(false);
 
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
@@ -194,6 +195,8 @@ const PerspectiveScreen = () => {
   };
 
   const handleSaveToJournal = async () => {
+    setIsSavingJournal(true);
+    setError('');
     try {
       const token = getAuthToken();
       const response = await fetch('/api/perspective/save-to-journal', {
@@ -217,6 +220,8 @@ const PerspectiveScreen = () => {
     } catch (err) {
       setError(err.message);
       console.error('Error saving to journal:', err);
+    } finally {
+      setIsSavingJournal(false);
     }
   };
 
@@ -660,12 +665,27 @@ const PerspectiveScreen = () => {
         
         <motion.button
           onClick={handleSaveToJournal}
-          className="flex items-center justify-center space-x-2 p-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          disabled={isSavingJournal}
+          className={`flex items-center justify-center space-x-2 p-4 rounded-xl font-medium transition-colors ${
+            isSavingJournal
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
+          }`}
+          whileHover={!isSavingJournal ? { scale: 1.02 } : {}}
+          whileTap={!isSavingJournal ? { scale: 0.98 } : {}}
         >
-          <Heart className="w-4 h-4" />
-          <span className="font-medium">Save Insights</span>
+          {isSavingJournal ? (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full"
+            />
+          ) : (
+            <>
+              <Heart className="w-4 h-4" />
+              <span>Save Insights</span>
+            </>
+          )}
         </motion.button>
       </div>
     </motion.div>
