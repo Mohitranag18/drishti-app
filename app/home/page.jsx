@@ -14,7 +14,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from "../context/AuthContext";
 import MoodTrendChart from '../components/MoodTrendChart';
 import EnhancedMoodSelector from '../components/EnhancedMoodSelector';
 
@@ -22,7 +22,7 @@ export const dynamic = 'force-dynamic';
 
 const HomeScreen = () => {
   const { setCurrentView } = useApp();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [currentCarouselIndex, setCurrentCarouselIndex] = useState(0);
   const [homeData, setHomeData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,16 +44,23 @@ const HomeScreen = () => {
 
   // Load home page data
   useEffect(() => {
-    loadHomeData();
-  }, []);
+    if (user && isAuthenticated) {
+      loadHomeData();
+    }
+  }, [user, isAuthenticated]);
 
   const loadHomeData = async () => {
+    if (!isAuthenticated) {
+      console.log('User not authenticated, skipping home data load');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
-      const response = await fetch('/api/home', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+
+      const response = await fetch("/api/home", {
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -61,19 +68,22 @@ const HomeScreen = () => {
         setHomeData(data);
         setTodayMood(data.todayMood);
       } else {
-        console.error('Failed to load home data');
+        console.error("Failed to load home data:", response.status);
       }
     } catch (error) {
-      console.error('Error loading home data:', error);
+      console.error("Error loading home data:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
+
   const handleMoodSave = (mood) => {
     setTodayMood(mood);
     // Refresh data to update recommendations and chart
-    loadHomeData();
+    if (isAuthenticated) {
+      loadHomeData();
+    }
   };
 
   // Generate mood-based inspirational cards
@@ -473,29 +483,28 @@ const HomeScreen = () => {
                 return (
                   <div
                     key={index}
-                    className={`min-w-full h-48 sm:h-56 bg-gradient-to-br ${card.gradient} relative flex items-center justify-center p-10 sm:p-14`}
+                    className={`min-w-full h-48 sm:h-56 bg-gradient-to-br ${card.gradient} relative flex items-center justify-center p-6`}
                   >
-                    <div className="text-center mx-auto">
+                    <div className="text-center max-w-sm">
                       <motion.div
-                        className="mb-1"
+                        className="mb-2"
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ delay: 0.2 + index * 0.1 }}
                       >
-                        <IconComponent className="w-6 h-6 sm:w-10 sm:h-10 text-white/90 mx-auto" />
+                        <IconComponent className="w-10 h-10 text-white/90 mx-auto" />
                       </motion.div>
-
-                      <h3 className="text-sm sm:text-lg font-semibold text-white mb-1 leading-relaxed">
+                      <h3 className="text-lg sm:text-md px-6 font-semibold text-white mb-3 leading-relaxed">
                         {card.text}
                       </h3>
-
-                      <div className="text-white/80 text-sm sm:text-base">
-                        {index < 2 && homeData?.recommendations?.[index]
-                          ? `Based on your current mood`
-                          : `Daily inspiration`}
+                      <div className="text-white/80 text-sm">
+                        {index < 2 && homeData?.recommendations?.[index] ? 
+                          `Based on your current mood` : 
+                          `Daily inspiration`
+                        }
                       </div>
                     </div>
-
+                    
                     {/* Decorative elements */}
                     <div className="absolute top-4 right-4 opacity-20">
                       <div className="w-16 h-16 bg-white/20 rounded-full"></div>
@@ -511,7 +520,7 @@ const HomeScreen = () => {
             {/* Enhanced Carousel Controls */}
             <motion.button
               onClick={prevCarousel}
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/40 transition-all shadow-lg"
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/40 transition-all shadow-lg"
               whileHover={{ scale: 1.1, x: -2 }}
               whileTap={{ scale: 0.9 }}
             >
@@ -519,7 +528,7 @@ const HomeScreen = () => {
             </motion.button>
             <motion.button
               onClick={nextCarousel}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/40 transition-all shadow-lg"
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/40 transition-all shadow-lg"
               whileHover={{ scale: 1.1, x: 2 }}
               whileTap={{ scale: 0.9 }}
             >

@@ -19,8 +19,10 @@ import {
 } from 'lucide-react';
 import ProtectedRoute from '../components/ProtectedRoute';
 import JournalDetailModal from '../components/JournalDetailModal';
+import { useAuth } from '../context/AuthContext';
 
 const JournalScreen = () => {
+  const { isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMood, setSelectedMood] = useState('all');
   const [showNewEntry, setShowNewEntry] = useState(false);
@@ -58,20 +60,12 @@ const JournalScreen = () => {
     '✨': { emoji: '✨', color: 'text-yellow-500', bg: 'bg-yellow-50', label: 'Inspired' }
   };
 
-  const getAuthToken = () => {
-    return localStorage.getItem('token');
-  };
 
   // Fetch journal entries
   const fetchJournals = useCallback(async (pageNum = 1, reset = false) => {
-    try {
-      const token = getAuthToken();
-      if (!token) {
-        setError('Please log in to view your journal');
-        setLoading(false);
-        return;
-      }
+    if (!isAuthenticated) return;
 
+    try {
       const params = new URLSearchParams({
         page: pageNum.toString(),
         limit: '10',
@@ -80,8 +74,8 @@ const JournalScreen = () => {
       });
 
       const response = await fetch(`/api/journal?${params}`, {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -108,17 +102,16 @@ const JournalScreen = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedMood]);
+  }, [searchQuery, selectedMood, isAuthenticated]);
 
   // Fetch stats
   const fetchStats = useCallback(async () => {
-    try {
-      const token = getAuthToken();
-      if (!token) return;
+    if (!isAuthenticated) return;
 
+    try {
       const response = await fetch('/api/journal/stats', {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -134,25 +127,34 @@ const JournalScreen = () => {
     } catch (err) {
       console.error('Error fetching stats:', err);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   // Initial load
   useEffect(() => {
-    fetchJournals(1, true);
-    fetchStats();
-  }, []);
+    if (isAuthenticated) {
+      fetchJournals(1, true);
+      fetchStats();
+    }
+  }, [isAuthenticated, fetchJournals, fetchStats]);
 
   // Handle search and filter changes
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     const timeoutId = setTimeout(() => {
       setLoading(true);
       fetchJournals(1, true);
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, selectedMood]);
+  }, [searchQuery, selectedMood, isAuthenticated, fetchJournals]);
 
   const handleNewEntry = async () => {
+    if (!isAuthenticated) {
+      setError('Not authenticated');
+      return;
+    }
+
     if (!newEntryContent.trim() || !newEntryTitle.trim()) {
       setError('Please fill in all required fields');
       return;
@@ -162,12 +164,10 @@ const JournalScreen = () => {
     setError('');
 
     try {
-      const token = getAuthToken();
-
       const response = await fetch('/api/journal', {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -208,16 +208,20 @@ const JournalScreen = () => {
   };
 
   const deleteEntry = async (id) => {
+    if (!isAuthenticated) {
+      setError('Not authenticated');
+      return;
+    }
+
     if (!confirm('Are you sure you want to delete this journal entry?')) {
       return;
     }
 
     try {
-      const token = getAuthToken();
       const response = await fetch(`/api/journal/${id}`, {
         method: 'DELETE',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -252,10 +256,9 @@ const JournalScreen = () => {
   };
 
   const loadMore = () => {
-    if (!loading && hasMore) {
-      setLoading(true);
-      fetchJournals(page + 1, false);
-    }
+    if (!isAuthenticated || loading || !hasMore) return;
+    setLoading(true);
+    fetchJournals(page + 1, false);
   };
 
   const formatDate = (dateString) => {
@@ -284,6 +287,7 @@ const JournalScreen = () => {
   };
 
   const refreshData = () => {
+    if (!isAuthenticated) return;
     setLoading(true);
     fetchJournals(1, true);
     fetchStats();
@@ -611,7 +615,7 @@ const JournalScreen = () => {
           </div>
         </div>
 
-        {/* Mobile Layout - Keep existing */}
+        {/* Mobile Layout */}
         <div className="block lg:hidden">
           <div className="px-4 sm:px-6 lg:px-8 pb-24 max-w-md mx-auto">
             
@@ -623,6 +627,7 @@ const JournalScreen = () => {
               transition={{ duration: 0.5 }}
             >
               <div className="flex items-center justify-between mb-4">
+                {/* Left Side: Icon and Title */}
                 <div className="flex items-center space-x-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
                     <BookOpen className="w-6 h-6 text-white" />
@@ -637,6 +642,7 @@ const JournalScreen = () => {
                   </div>
                 </div>
                 
+                {/* Right Side: Action Buttons */}
                 <div className="flex items-center space-x-2">
                   <motion.button
                     onClick={refreshData}

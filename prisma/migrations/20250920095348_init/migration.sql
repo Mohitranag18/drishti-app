@@ -1,8 +1,8 @@
 -- CreateTable
 CREATE TABLE "public"."users" (
     "id" TEXT NOT NULL,
+    "clerkId" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "password_hash" TEXT NOT NULL,
     "username" TEXT NOT NULL,
     "first_name" TEXT NOT NULL,
     "last_name" TEXT NOT NULL,
@@ -124,6 +124,9 @@ CREATE TABLE "public"."conversations" (
 
     CONSTRAINT "conversations_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "users_clerkId_key" ON "public"."users"("clerkId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "public"."users"("email");

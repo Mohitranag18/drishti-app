@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Send, RotateCcw, Lightbulb, Heart, Target, TrendingUp, Sparkles } from 'lucide-react';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useApp } from '../context/AppContext';
+import PerspectiveChatbot from '../components/PerspectiveChatbot';
 
 const PerspectiveScreen = () => {
   const { state, setCurrentView, clearContinueSession } = useApp();
@@ -18,7 +19,6 @@ const PerspectiveScreen = () => {
   const [perspectiveCards, setPerspectiveCards] = useState([]);
   const [pointsEarned, setPointsEarned] = useState(0);
   const [error, setError] = useState('');
-  const [isSavingJournal, setIsSavingJournal] = useState(false);
 
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
@@ -59,9 +59,7 @@ const PerspectiveScreen = () => {
     return "Share what's bothering you, and I'll help you see it differently";
   };
 
-  const getAuthToken = () => {
-    return localStorage.getItem('token');
-  };
+  
 
   const handleSubmitInput = async () => {
     if (!userInput.trim()) return;
@@ -70,12 +68,11 @@ const PerspectiveScreen = () => {
     setError('');
 
     try {
-      const token = getAuthToken();
       const response = await fetch('/api/perspective/create-session', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ userInput: userInput.trim() })
       });
@@ -101,12 +98,11 @@ const PerspectiveScreen = () => {
 
   const generateQuizQuestions = async (sessionId) => {
     try {
-      const token = getAuthToken();
       const response = await fetch('/api/perspective/generate-quiz', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ 
           sessionId, 
@@ -141,8 +137,6 @@ const PerspectiveScreen = () => {
     setError('');
 
     try {
-      const token = getAuthToken();
-      
       // Submit answers
       const answersArray = Object.entries(quizAnswers).map(([questionId, value]) => ({
         questionId,
@@ -151,9 +145,9 @@ const PerspectiveScreen = () => {
 
       const submitResponse = await fetch('/api/perspective/submit-answers', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ 
           sessionId, 
@@ -169,9 +163,9 @@ const PerspectiveScreen = () => {
       // Generate perspective cards
       const cardsResponse = await fetch('/api/perspective/generate-cards', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ sessionId })
       });
@@ -195,15 +189,12 @@ const PerspectiveScreen = () => {
   };
 
   const handleSaveToJournal = async () => {
-    setIsSavingJournal(true);
-    setError('');
     try {
-      const token = getAuthToken();
       const response = await fetch('/api/perspective/save-to-journal', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ sessionId })
       });
@@ -220,8 +211,6 @@ const PerspectiveScreen = () => {
     } catch (err) {
       setError(err.message);
       console.error('Error saving to journal:', err);
-    } finally {
-      setIsSavingJournal(false);
     }
   };
 
@@ -591,8 +580,8 @@ const PerspectiveScreen = () => {
       {/* Perspective Cards */}
       <div className="space-y-6">
         {perspectiveCards.map((card, index) => {
-          const IconComponent = getCardIcon(card.type);
-          const gradientClass = getCardGradient(card.type);
+          const IconComponent = getCardIcon(card.card_type);
+          const gradientClass = getCardGradient(card.card_type);
 
           return (
             <motion.div
@@ -651,6 +640,15 @@ const PerspectiveScreen = () => {
         })}
       </div>
 
+      {/* Chatbot */}
+      {sessionId && perspectiveCards.length > 0 && (
+        <PerspectiveChatbot 
+          sessionId={sessionId} 
+          cards={perspectiveCards} 
+          userInput={userInput} 
+        />
+      )}
+
       {/* Action Buttons */}
       <div className="grid grid-cols-2 gap-3">
         <motion.button
@@ -665,27 +663,12 @@ const PerspectiveScreen = () => {
         
         <motion.button
           onClick={handleSaveToJournal}
-          disabled={isSavingJournal}
-          className={`flex items-center justify-center space-x-2 p-4 rounded-xl font-medium transition-colors ${
-            isSavingJournal
-              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
-          }`}
-          whileHover={!isSavingJournal ? { scale: 1.02 } : {}}
-          whileTap={!isSavingJournal ? { scale: 0.98 } : {}}
+          className="flex items-center justify-center space-x-2 p-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          {isSavingJournal ? (
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full"
-            />
-          ) : (
-            <>
-              <Heart className="w-4 h-4" />
-              <span>Save Insights</span>
-            </>
-          )}
+          <Heart className="w-4 h-4" />
+          <span className="font-medium">Save Insights</span>
         </motion.button>
       </div>
     </motion.div>

@@ -1,13 +1,20 @@
-import { authenticateUser } from '../../../../lib/auth';
+import { auth } from '@clerk/nextjs/server';
 import { prisma } from '../../../../lib/prisma';
 import { NextResponse } from 'next/server';
 
 export async function PATCH(request) {
   try {
-    const { user, error } = await authenticateUser(request);
-    
-    if (error) {
-      return NextResponse.json({ error }, { status: 401 });
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const localUser = await prisma.user.findUnique({
+      where: { clerkId: userId },
+    });
+
+    if (!localUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const body = await request.json();
@@ -59,7 +66,7 @@ export async function PATCH(request) {
       const existingUser = await prisma.user.findFirst({
         where: {
           AND: [
-            { id: { not: user.id } },
+            { id: { not: localUser.id } },
             {
               OR: [
                 updateData.email ? { email: updateData.email } : {},
@@ -87,13 +94,13 @@ export async function PATCH(request) {
     }
 
     // If email is being updated, set is_verified to false
-    if (updateData.email && updateData.email !== user.email) {
+    if (updateData.email && updateData.email !== localUser.email) {
       updateData.is_verified = false;
     }
 
     // Update user profile
     const updatedUser = await prisma.user.update({
-      where: { id: user.id },
+      where: { id: localUser.id },
       data: {
         ...updateData,
         updated_at: new Date()

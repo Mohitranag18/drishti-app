@@ -1,16 +1,14 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { authenticateUser } from '../../../lib/auth';
+import { getAuthenticatedUser } from '../../../lib/authUtils';
 
 const prisma = new PrismaClient();
 
 // GET /api/notifications - Get all notifications for the current user
 export async function GET(request) {
   try {
-    const { user, error } = await authenticateUser(request);
-    if (error) {
-      return NextResponse.json({ error }, { status: 401 });
-    }
+    const { user, error } = await getAuthenticatedUser(request);
+    if (error) return error;
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit')) || 50;
@@ -52,10 +50,8 @@ export async function GET(request) {
 // POST /api/notifications - Create a new notification
 export async function POST(request) {
   try {
-    const { user, error } = await authenticateUser(request);
-    if (error) {
-      return NextResponse.json({ error }, { status: 401 });
-    }
+    const { user, error } = await getAuthenticatedUser(request);
+    if (error) return error;
 
     const body = await request.json();
     const { title, message, type, scheduled_for } = body;

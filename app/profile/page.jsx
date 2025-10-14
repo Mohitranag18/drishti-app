@@ -23,7 +23,7 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import { useAuth } from '../context/AuthContext';
 
 const ProfileScreen = () => {
-  const { user, logout, updateUser } = useAuth();
+  const { user, logout, updateUser, isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [userStats, setUserStats] = useState({
@@ -51,10 +51,9 @@ const ProfileScreen = () => {
   // Fetch user stats
   const fetchUserStats = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch('/api/user/stats', {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -107,9 +106,9 @@ const ProfileScreen = () => {
     try {
       const response = await fetch('/api/user/preferences', {
         method: 'PATCH',
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           [key]: value
@@ -142,9 +141,9 @@ const ProfileScreen = () => {
       
       const response = await fetch('/api/user/profile', {
         method: 'PATCH',
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(editForm)
       });
