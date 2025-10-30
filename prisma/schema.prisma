@@ -32,6 +32,7 @@ model User {
   notifications        Notification[]
   perspective_sessions PerspectiveSession[]
   conversations        Conversation[]
+  daily_summaries      DailySummary[]
 
   @@map("users")
 }
@@ -143,4 +144,34 @@ model Conversation {
   session   PerspectiveSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
   
   @@map("conversations")
+}
+
+model DailySummary {
+  id                String   @id @default(cuid())
+  user_id           String
+  date              DateTime
+  day               Int
+  week              Int
+  month             Int
+  year              Int
+  mood_emoji        String?
+  mood_rate         Int?
+  happiness_score   Float
+  sadness_score     Float
+  anxiety_score     Float
+  energy_score      Float
+  loneliness_score  Float
+  overall_wellness  Float
+  ai_summary        String
+  key_insights      Json?
+  journal_count     Int      @default(0)
+  perspective_count Int      @default(0)
+  mood_ids          Int[]
+  journal_ids       String[]
+  session_ids       String[]
+  created_at        DateTime @default(now())
+  
+  user              User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  @@map("daily_summaries")
 }
