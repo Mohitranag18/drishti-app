@@ -166,7 +166,7 @@ model DailySummary {
   key_insights      Json?
   journal_count     Int      @default(0)
   perspective_count Int      @default(0)
-  mood_ids          Int[]
+  mood_ids          String[]
   journal_ids       String[]
   session_ids       String[]
   created_at        DateTime @default(now())
