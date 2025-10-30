@@ -152,6 +152,14 @@ export async function POST(request) {
       });
     }
 
+    // Generate notifications based on milestones
+    try {
+      const notificationService = (await import('../../../lib/notificationService')).default;
+      await notificationService.checkMilestones(user.id);
+    } catch (notificationError) {
+      console.error('Error generating notifications:', notificationError);
+    }
+
     return NextResponse.json({ 
       success: true, 
       mood: savedMood,

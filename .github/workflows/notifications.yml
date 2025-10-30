@@ -1,0 +1,55 @@
+name: Notification Processing
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Run every hour at minute 0
+  workflow_dispatch:
+
+jobs:
+  process-notifications:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Process Notifications
+        run: |
+          APP_URL="${APP_URL:-https://your-app.vercel.app}"
+          CRON_SECRET="${CRON_SECRET:-your-cron-secret}"
+          
+          echo "Processing scheduled notifications and setting up automatic reminders..."
+          
+          response=$(curl -s -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            "$APP_URL/api/notifications/process-batch")
+          
+          echo "Response: $response"
+          
+          if echo "$response" | grep -q '"success":true'; then
+            echo "✅ Notifications processed successfully"
+            
+            # Extract and display stats
+            processed=$(echo "$response" | grep -o '"processed":[0-9]*' | cut -d':' -f2)
+            created=$(echo "$response" | grep -o '"created":[0-9]*' | cut -d':' -f2)
+            scheduled_processed=$(echo "$response" | grep -o '"scheduledProcessed":[0-9]*' | cut -d':' -f2)
+            weekly_summaries=$(echo "$response" | grep -o '"weeklySummariesGenerated":[0-9]*' | cut -d':' -f2)
+            weekly_notifications=$(echo "$response" | grep -o '"weeklySummaryNotifications":[0-9]*' | cut -d':' -f2)
+            reminders_setup=$(echo "$response" | grep -o '"remindersSetup":[0-9]*' | cut -d':' -f2)
+            
+            echo "📊 Notification Stats:"
+            echo "   • Total notifications processed: $processed"
+            echo "   • New notifications created: $created"
+            echo "   • Scheduled notifications sent: $scheduled_processed"
+            echo "   • Weekly summaries generated: $weekly_summaries"
+            echo "   • Weekly summary notifications sent: $weekly_notifications"
+            echo "   • Automatic reminders setup: $reminders_setup"
+            
+            exit 0
+          else
+            echo "❌ Failed to process notifications"
+            echo "Response: $response"
+            exit 1
+          fi
+        
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
