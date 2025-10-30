@@ -33,6 +33,7 @@ model User {
   perspective_sessions PerspectiveSession[]
   conversations        Conversation[]
   daily_summaries      DailySummary[]
+  weekly_summaries      WeeklySummary[]
 
   @@map("users")
 }
