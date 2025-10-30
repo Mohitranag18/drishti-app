@@ -87,7 +87,7 @@ export async function POST(request) {
           const { week, month, year } = getDateNumbers(weekStart);
 
           // Check if weekly summary already exists
-          const existingSummary = await prisma.weeklySummary.findFirst({
+          const existingSummary = await prisma.WeeklySummary.findFirst({
             where: {
               user_id: user.id,
               week: week,
@@ -173,7 +173,7 @@ export async function POST(request) {
             : null;
 
           // Create weekly summary
-          await prisma.weeklySummary.create({
+          await prisma.WeeklySummary.create({
             data: {
               user_id: user.id,
               week_start: weekStart,
