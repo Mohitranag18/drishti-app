@@ -30,73 +30,41 @@ export async function POST(request) {
       results.details.scheduledProcessed = scheduledProcessed;
       results.processed += scheduledProcessed;
 
-      // 2. Generate weekly summaries (run on Sundays)
-      const now = new Date();
-      const dayOfWeek = now.getDay(); // 0 = Sunday
-      let weeklySummariesGenerated = 0;
-      
-      if (dayOfWeek === 0) { // Sunday
-        try {
-          const weeklySummaryResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/weekly-summary/generate-batch`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${process.env.CRON_SECRET}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          if (weeklySummaryResponse.ok) {
-            const weeklyData = await weeklySummaryResponse.json();
-            weeklySummariesGenerated = weeklyData.results?.created || 0;
-            results.details.weeklySummariesGenerated = weeklySummariesGenerated;
-            results.created += weeklySummariesGenerated;
-            
-            // Send notifications for newly created weekly summaries
-            const { prisma } = await import('../../../../lib/prisma');
-            const recentWeeklySummaries = await prisma.weeklySummary.findMany({
-              where: {
-                created_at: {
-                  gte: new Date(Date.now() - 60 * 60 * 1000) // Last hour
-                }
-              },
-              include: {
-                user: {
-                  select: { id: true }
-                }
-              }
-            });
-            
-            for (const weeklySummary of recentWeeklySummaries) {
-              try {
-                await notificationService.createWeeklySummaryNotification(
-                  weeklySummary.user_id, 
-                  weeklySummary
-                );
-                results.details.weeklySummaryNotifications++;
-                results.created++;
-              } catch (error) {
-                console.error(`Error creating weekly summary notification for user ${weeklySummary.user_id}:`, error);
-                results.errors++;
-                results.errorDetails.push({
-                  userId: weeklySummary.user_id,
-                  action: 'weekly_summary_notification',
-                  error: error.message
-                });
-              }
-            }
+      // 2. Send notifications for newly created weekly summaries (check every hour)
+      const { prisma } = await import('../../../../lib/prisma');
+      const recentWeeklySummaries = await prisma.weeklySummary.findMany({
+        where: {
+          created_at: {
+            gte: new Date(Date.now() - 60 * 60 * 1000) // Last hour
           }
+        },
+        include: {
+          user: {
+            select: { id: true }
+          }
+        }
+      });
+      
+      for (const weeklySummary of recentWeeklySummaries) {
+        try {
+          await notificationService.createWeeklySummaryNotification(
+            weeklySummary.user_id, 
+            weeklySummary
+          );
+          results.details.weeklySummaryNotifications++;
+          results.created++;
         } catch (error) {
-          console.error('Error generating weekly summaries:', error);
+          console.error(`Error creating weekly summary notification for user ${weeklySummary.user_id}:`, error);
           results.errors++;
           results.errorDetails.push({
-            action: 'weekly_summaries',
+            userId: weeklySummary.user_id,
+            action: 'weekly_summary_notification',
             error: error.message
           });
         }
       }
 
       // 3. Setup automatic reminders for active users
-      const { prisma } = await import('../../../../lib/prisma');
       
       // Get all active users (users with activity in last 7 days)
       const activeUsers = await prisma.user.findMany({
