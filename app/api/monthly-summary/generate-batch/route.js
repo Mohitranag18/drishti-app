@@ -67,29 +67,17 @@ export async function POST(request) {
 
       for (const user of activeUsers) {
         try {
-          // Calculate the month date range (last completed month)
+          // Calculate the month date range (current month - assume we run at end of month)
           const now = new Date();
           const currentMonth = now.getMonth(); // 0-11 (0 = January)
           
-          // Calculate the start and end of the previous month
-          let monthStart, monthEnd, month, year;
-          
-          if (currentMonth === 0) {
-            // If we're in January, previous month is December of last year
-            monthStart = new Date(now.getFullYear() - 1, 11, 1); // December 1 of last year
-            monthEnd = new Date(now.getFullYear() - 1, 11, 31); // December 31 of last year
-            month = 12;
-            year = now.getFullYear() - 1;
-          } else {
-            // Otherwise, previous month is current month - 1
-            const previousMonth = currentMonth - 1;
-            monthStart = new Date(now.getFullYear(), previousMonth, 1);
-            // Get last day of previous month
-            const lastDayOfMonth = new Date(now.getFullYear(), currentMonth, 0).getDate();
-            monthEnd = new Date(now.getFullYear(), previousMonth, lastDayOfMonth);
-            month = previousMonth;
-            year = now.getFullYear();
-          }
+          // Calculate the start and end of the current month
+          const monthStart = new Date(now.getFullYear(), currentMonth, 1);
+          // Get last day of current month
+          const lastDayOfMonth = new Date(now.getFullYear(), currentMonth + 1, 0).getDate();
+          const monthEnd = new Date(now.getFullYear(), currentMonth, lastDayOfMonth, 23, 59, 59, 999);
+          const month = currentMonth + 1; // Convert to 1-12 format for database
+          const year = now.getFullYear();
 
           // Check if monthly summary already exists
           const existingSummary = await prisma.MonthlySummary.findFirst({
