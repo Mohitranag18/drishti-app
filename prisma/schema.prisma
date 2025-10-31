@@ -27,6 +27,7 @@ model User {
   wellness_reminders   Boolean              @default(true)
   weekly_summary       Boolean              @default(true)
   monthly_summary      Boolean              @default(true)
+  email_preferences     Json?                @default("{\"weekly_summary\": true, \"monthly_summary\": true, \"milestones\": true, \"daily_reminders\": false}")
   sessions             Int                  @default(0)
   journals             Journal[]
   moods                Mood[]
