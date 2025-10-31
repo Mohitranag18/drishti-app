@@ -82,11 +82,12 @@ export async function POST(request) {
             year = now.getFullYear() - 1;
           } else {
             // Otherwise, previous month is current month - 1
-            monthStart = new Date(now.getFullYear(), currentMonth - 1, 1);
+            const previousMonth = currentMonth - 1;
+            monthStart = new Date(now.getFullYear(), previousMonth, 1);
             // Get last day of previous month
             const lastDayOfMonth = new Date(now.getFullYear(), currentMonth, 0).getDate();
-            monthEnd = new Date(now.getFullYear(), currentMonth - 1, lastDayOfMonth);
-            month = currentMonth;
+            monthEnd = new Date(now.getFullYear(), previousMonth, lastDayOfMonth);
+            month = previousMonth;
             year = now.getFullYear();
           }
 
