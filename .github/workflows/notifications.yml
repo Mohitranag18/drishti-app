@@ -31,14 +31,12 @@ jobs:
             processed=$(echo "$response" | grep -o '"processed":[0-9]*' | cut -d':' -f2)
             created=$(echo "$response" | grep -o '"created":[0-9]*' | cut -d':' -f2)
             scheduled_processed=$(echo "$response" | grep -o '"scheduledProcessed":[0-9]*' | cut -d':' -f2)
-            weekly_notifications=$(echo "$response" | grep -o '"weeklySummaryNotifications":[0-9]*' | cut -d':' -f2)
             reminders_setup=$(echo "$response" | grep -o '"remindersSetup":[0-9]*' | cut -d':' -f2)
             
             echo "📊 Notification Stats:"
             echo "   • Total notifications processed: $processed"
             echo "   • New notifications created: $created"
             echo "   • Scheduled notifications sent: $scheduled_processed"
-            echo "   • Weekly summary notifications sent: $weekly_notifications"
             echo "   • Automatic reminders setup: $reminders_setup"
             
             exit 0

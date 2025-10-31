@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import notificationService from '../../../../lib/notificationService';
+import { prisma } from '../../../../lib/prisma';
 
 export async function POST(request) {
   try {
@@ -18,8 +19,6 @@ export async function POST(request) {
       errorDetails: [],
       details: {
         scheduledProcessed: 0,
-        weeklySummariesGenerated: 0,
-        weeklySummaryNotifications: 0,
         remindersSetup: 0
       }
     };
@@ -30,41 +29,7 @@ export async function POST(request) {
       results.details.scheduledProcessed = scheduledProcessed;
       results.processed += scheduledProcessed;
 
-      // 2. Send notifications for newly created weekly summaries (check every hour)
-      const { prisma } = await import('../../../../lib/prisma');
-      const recentWeeklySummaries = await prisma.weeklySummary.findMany({
-        where: {
-          created_at: {
-            gte: new Date(Date.now() - 60 * 60 * 1000) // Last hour
-          }
-        },
-        include: {
-          user: {
-            select: { id: true }
-          }
-        }
-      });
-      
-      for (const weeklySummary of recentWeeklySummaries) {
-        try {
-          await notificationService.createWeeklySummaryNotification(
-            weeklySummary.user_id, 
-            weeklySummary
-          );
-          results.details.weeklySummaryNotifications++;
-          results.created++;
-        } catch (error) {
-          console.error(`Error creating weekly summary notification for user ${weeklySummary.user_id}:`, error);
-          results.errors++;
-          results.errorDetails.push({
-            userId: weeklySummary.user_id,
-            action: 'weekly_summary_notification',
-            error: error.message
-          });
-        }
-      }
-
-      // 3. Setup automatic reminders for active users
+      // 2. Setup automatic reminders for active users
       
       // Get all active users (users with activity in last 7 days)
       const activeUsers = await prisma.user.findMany({

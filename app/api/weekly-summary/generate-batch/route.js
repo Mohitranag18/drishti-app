@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
 import { generateWeeklySummary } from '../../../../lib/aiService';
 import { getDateNumbers } from '../../../../lib/journalUtils';
+import notificationService from '../../../../lib/notificationService';
 
 export async function POST(request) {
   try {
@@ -18,7 +19,8 @@ export async function POST(request) {
       created: 0,
       updated: 0,
       errors: 0,
-      errorDetails: []
+      errorDetails: [],
+      weeklySummaryNotifications: 0
     };
 
     try {
@@ -173,7 +175,7 @@ export async function POST(request) {
             : null;
 
           // Create weekly summary
-          await prisma.WeeklySummary.create({
+          const weeklySummary = await prisma.WeeklySummary.create({
             data: {
               user_id: user.id,
               week_start: weekStart,
@@ -202,6 +204,15 @@ export async function POST(request) {
               daily_summary_ids: dailySummaries.map(ds => ds.id)
             }
           });
+
+          // Send notification for the weekly summary
+          try {
+            await notificationService.createWeeklySummaryNotification(user.id, weeklySummary);
+            results.weeklySummaryNotifications++;
+          } catch (notificationError) {
+            console.error(`Error sending weekly summary notification for user ${user.id}:`, notificationError);
+            // Don't fail the whole process if notification fails, just log it
+          }
 
           results.created++;
           results.processed++;

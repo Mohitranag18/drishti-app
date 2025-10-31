@@ -31,10 +31,12 @@ jobs:
             processed=$(echo "$response" | grep -o '"processed":[0-9]*' | cut -d':' -f2)
             created=$(echo "$response" | grep -o '"created":[0-9]*' | cut -d':' -f2)
             errors=$(echo "$response" | grep -o '"errors":[0-9]*' | cut -d':' -f2)
+            weekly_notifications=$(echo "$response" | grep -o '"weeklySummaryNotifications":[0-9]*' | cut -d':' -f2)
             
             echo "📊 Weekly Summary Stats:"
             echo "   • Users processed: $processed"
             echo "   • Weekly summaries created: $created"
+            echo "   • Weekly summary notifications sent: $weekly_notifications"
             echo "   • Errors encountered: $errors"
             
             exit 0
