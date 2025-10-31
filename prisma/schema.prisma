@@ -26,6 +26,7 @@ model User {
   dark_mode            Boolean              @default(false)
   wellness_reminders   Boolean              @default(true)
   weekly_summary       Boolean              @default(true)
+  monthly_summary      Boolean              @default(true)
   sessions             Int                  @default(0)
   journals             Journal[]
   moods                Mood[]
@@ -34,6 +35,7 @@ model User {
   conversations        Conversation[]
   daily_summaries      DailySummary[]
   weekly_summaries      WeeklySummary[]
+  monthly_summaries     MonthlySummary[]
 
   @@map("users")
 }
@@ -209,4 +211,39 @@ model WeeklySummary {
   user                  User @relation(fields: [user_id], references: [id], onDelete: Cascade)
   
   @@map("weekly_summaries")
+}
+
+model MonthlySummary {
+  id                    String   @id @default(cuid())
+  user_id               String
+  month_start           DateTime
+  month_end             DateTime
+  month                 Int
+  year                  Int
+  avg_mood_emoji        String?
+  avg_mood_rate         Float?
+  overall_wellness_score  Float?
+  total_journals         Int      @default(0)
+  total_perspective_sessions Int      @default(0)
+  total_mood_entries    Int      @default(0)
+  total_weekly_summaries Int      @default(0)
+  dominant_theme        String?
+  growth_insights       Json?
+  achievement_highlights String[]
+  challenges_faced      String[]
+  ai_summary           String
+  short_summary        String
+  detailed_summary      String
+  recommendations       Json?
+  weekly_summary_ids    String[]
+  journal_ids           String[]
+  session_ids           String[]
+  mood_ids             String[]
+  daily_summary_ids    String[]
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+  
+  user                  User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  @@map("monthly_summaries")
 }
