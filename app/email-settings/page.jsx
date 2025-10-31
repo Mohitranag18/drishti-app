@@ -1,7 +1,7 @@
 'use client';
 
-import EmailPreferences from '../../components/EmailPreferences';
-import ProtectedRoute from '../../components/ProtectedRoute';
+import EmailPreferences from '../components/EmailPreferences';
+import ProtectedRoute from '../components/ProtectedRoute';
 
 const EmailSettingsPage = () => {
   return (
