@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Send, RotateCcw, Lightbulb, Heart, Target, TrendingUp, Sparkles } from 'lucide-react';
+import { ArrowLeft, Send, RotateCcw, Lightbulb, Heart, Target, TrendingUp, Sparkles, Mic } from 'lucide-react';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useApp } from '../context/AppContext';
 import PerspectiveChatbot from '../components/PerspectiveChatbot';
+import PracticeRoomSetup from '../components/PracticeRoomSetup';
 
 const PerspectiveScreen = () => {
   const { state, setCurrentView, clearContinueSession } = useApp();
@@ -19,6 +20,7 @@ const PerspectiveScreen = () => {
   const [perspectiveCards, setPerspectiveCards] = useState([]);
   const [pointsEarned, setPointsEarned] = useState(0);
   const [error, setError] = useState('');
+  const [showPracticeSetup, setShowPracticeSetup] = useState(false);
 
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
@@ -234,6 +236,7 @@ const PerspectiveScreen = () => {
     setPointsEarned(0);
     setFlippedCards(new Set());
     setError('');
+    setShowPracticeSetup(false);
     // Clear any continue session state
     clearContinueSession();
   };
@@ -646,6 +649,27 @@ const PerspectiveScreen = () => {
           sessionId={sessionId} 
           cards={perspectiveCards} 
           userInput={userInput} 
+        />
+      )}
+
+      {/* Practice Room CTA */}
+      {!showPracticeSetup && (
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          onClick={() => setShowPracticeSetup(true)}
+          className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl flex items-center justify-center gap-2 hover:shadow-xl transition-all"
+        >
+          <Mic className="w-5 h-5" />
+          Want to practice this conversation?
+        </motion.button>
+      )}
+
+      {showPracticeSetup && (
+        <PracticeRoomSetup
+          sessionId={sessionId}
+          userInput={userInput}
+          onStart={(roomUrl) => window.open(roomUrl, '_blank')}
         />
       )}
 
